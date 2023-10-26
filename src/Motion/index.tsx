@@ -30,10 +30,10 @@ type PolymorphicMotionProps<T extends keyof JSX.IntrinsicElements> = {
   transition?: AnimationOptionsWithOverrides;
   onMotionStart?: (controls: AnimationControls) => void;
   onMotionEnd?: (controls: AnimationControls) => void;
-  onHoverStart?: (event: React.MouseEvent<T>) => void;
-  onHoverEnd?: (event: React.MouseEvent<T>) => void;
-  onPressStart?: (event: React.MouseEvent<T>) => void;
-  onPressEnd?: (event: React.MouseEvent<T>) => void;
+  onHoverStart?: (event: React.MouseEvent) => void;
+  onHoverEnd?: (event: React.MouseEvent) => void;
+  onPressStart?: (event: React.MouseEvent) => void;
+  onPressEnd?: (event: React.MouseEvent) => void;
 } & JSX.IntrinsicElements[T];
 
 interface KeyframesDefinition extends MotionKeyframesDefinition {
@@ -75,7 +75,7 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
   const Component = as as string;
 
   const onMouseOverWithAnimation = React.useCallback(
-    (event: React.MouseEvent<T>) => {
+    (event: React.MouseEvent) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onMouseOver?.(event as any);
       onHoverStart?.(event);
@@ -97,7 +97,7 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
   );
 
   const onClickWithAnimation = React.useCallback(
-    (event: React.MouseEvent<T>) => {
+    (event: React.MouseEvent) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onClick?.(event as any);
 
@@ -118,21 +118,21 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
   );
 
   const combinedOnMouseLeave = React.useCallback(
-    (event: React.MouseEvent<T>) =>
+    (event: React.MouseEvent) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       [onMouseLeave, onHoverEnd].forEach((handler) => handler?.(event as any)),
     [onMouseLeave, onHoverEnd]
   );
 
   const combinedOnMouseDown = React.useCallback(
-    (event: React.MouseEvent<T>) =>
+    (event: React.MouseEvent) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       [onMouseDown, onPressStart].forEach((handler) => handler?.(event as any)),
     [onMouseDown, onPressStart]
   );
 
   const combinedOnMouseUp = React.useCallback(
-    (event: React.MouseEvent<T>) =>
+    (event: React.MouseEvent) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       [onMouseUp, onPressEnd].forEach((handler) => handler?.(event as any)),
     [onMouseUp, onPressEnd]
