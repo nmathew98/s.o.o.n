@@ -7,7 +7,8 @@ export const usePreviousValueEffect = (f: PreviousValueEffect, deps?: React.Depe
         const cleanup = f(previousDeps.current, deps);
 
         return cleanup;
-    }, [f, deps])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, deps ? [...deps] : deps);
 }
 
 export type PreviousValueEffect = (from: React.DependencyList | undefined, to: React.DependencyList | undefined) => void | (() => void);
