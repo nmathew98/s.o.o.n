@@ -1,10 +1,12 @@
 import {
   type AnimationControls,
   type AnimationOptionsWithOverrides,
-  type MotionKeyframesDefinition,
-  animate,
+  type CSSStyleDeclarationWithTransform,
+  animate as motionAnimate,
+  ValueKeyframe,
 } from "motion";
 import React from "react";
+import { usePreviousValueEffect } from "../hooks/use-previous-value-effect";
 
 export type Motion = {
   [K in keyof JSX.IntrinsicElements]: React.FC<JSX.IntrinsicElements[K]>;
@@ -36,17 +38,17 @@ type PolymorphicMotionProps<T extends keyof JSX.IntrinsicElements> = {
   onPressEnd?: React.MouseEventHandler<T>;
 } & JSX.IntrinsicElements[T];
 
-interface KeyframesDefinition extends MotionKeyframesDefinition {
-  transition?: AnimationOptionsWithOverrides;
-}
+type KeyframesDefinition = {
+  [K in keyof CSSStyleDeclarationWithTransform]?: ValueKeyframe;
+} & { transition?: AnimationOptionsWithOverrides };
 
 const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
   as,
-  initial: initialAnimations,
-  animate: alwaysAnimations,
-  hover: hoverAnimations,
-  press: pressAnimations,
-  exit: exitAnimations,
+  initial,
+  animate,
+  hover,
+  press,
+  exit,
   transition,
   onMouseUp,
   onMouseDown,
@@ -61,177 +63,43 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
   onPressEnd,
   ...rest
 }: PolymorphicMotionProps<T>) => {
-  const haveInitialAnimationsTriggered = React.useRef(!initialAnimations);
   const componentRef = React.useRef<null | HTMLElement>(null);
 
-  const emitMotionEvents = React.useCallback(
-    (controls: AnimationControls) => {
-      onMotionStart?.(controls);
-      controls.finished.then(() => onMotionEnd?.(controls));
-    },
-    [onMotionStart, onMotionEnd]
-  );
+  usePreviousValueEffect(
+    (from, to) => {
+      if (componentRef.current && from?.every(Boolean) && to?.every(Boolean)) {
+        const [animateFrom] = from as [KeyframesDefinition];
+        const [animateTo] = to as [KeyframesDefinition];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onMouseOverWithAnimation: React.MouseEventHandler<any> =
-    React.useCallback(
-      (event) => {
-        onMouseOver?.(event);
-        onHoverStart?.(event);
+        const { transition: animateFromTransition, ...rest } = animateFrom;
+        const animateFromEntries = Object.entries(rest);
 
-        if (!componentRef.current || !hoverAnimations) return;
+        const merged = animateFromEntries.map(([key, initialValue]) => {
+          const finalValue =
+            animateTo[key as keyof CSSStyleDeclarationWithTransform];
 
-        const { transition: hoverAnimationsTransitions, ...rest } =
-          hoverAnimations;
+          return [key, [initialValue, finalValue]];
+        });
 
-        const hoverAnimationsControls = animate(
+        motionAnimate(
           componentRef.current,
-          rest,
-          hoverAnimationsTransitions ?? transition
+          Object.fromEntries(merged),
+          animateFromTransition ?? transition
         );
-
-        emitMotionEvents(hoverAnimationsControls);
-      },
-      [onMouseOver, hoverAnimations, transition, emitMotionEvents, onHoverStart]
-    );
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onClickWithAnimation: React.MouseEventHandler<any> = React.useCallback(
-    (event) => {
-      onClick?.(event);
-
-      if (!componentRef.current || !pressAnimations) return;
-
-      const { transition: pressAnimationsTransitions, ...rest } =
-        pressAnimations;
-
-      const pressAnimationsControls = animate(
-        componentRef.current,
-        rest,
-        pressAnimationsTransitions ?? transition
-      );
-
-      emitMotionEvents(pressAnimationsControls);
+      }
     },
-    [onClick, pressAnimations, transition, emitMotionEvents]
-  );
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const combinedOnMouseLeave: React.MouseEventHandler<any> = React.useCallback(
-    (event) =>
-      [onMouseLeave, onHoverEnd].forEach((handler) => handler?.(event)),
-    [onMouseLeave, onHoverEnd]
-  );
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const combinedOnMouseDown: React.MouseEventHandler<any> = React.useCallback(
-    (event) =>
-      [onMouseDown, onPressStart].forEach((handler) => handler?.(event)),
-    [onMouseDown, onPressStart]
-  );
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const combinedOnMouseUp: React.MouseEventHandler<any> = React.useCallback(
-    (event) => [onMouseUp, onPressEnd].forEach((handler) => handler?.(event)),
-    [onMouseUp, onPressEnd]
+    [animate]
   );
 
   React.useEffect(() => {
-    if (
-      !componentRef.current ||
-      !alwaysAnimations ||
-      !haveInitialAnimationsTriggered.current
-    )
-      return;
+    if (!componentRef.current || !initial) return;
 
-    const { transition: alwaysAnimationsTransitions, ...rest } =
-      alwaysAnimations;
+    const { transition: initialTransition, ...rest } = initial;
 
-    const element = componentRef.current;
-
-    const alwaysAnimationsControls = animate(
-      element,
-      rest,
-      alwaysAnimationsTransitions ?? transition
-    );
-
-    emitMotionEvents(alwaysAnimationsControls);
-
-    return () => {
-      alwaysAnimationsControls.stop();
-
-      if (
-        !element ||
-        !exitAnimations ||
-        (initialAnimations && !haveInitialAnimationsTriggered.current)
-      )
-        return;
-
-      const { transition: exitAnimationsTransitions, ...rest } = exitAnimations;
-
-      const exitAnimationsControls = animate(
-        element,
-        rest,
-        exitAnimationsTransitions ?? transition
-      );
-
-      emitMotionEvents(exitAnimationsControls);
-    };
-  });
-
-  React.useEffect(() => {
-    if (
-      !componentRef.current ||
-      !initialAnimations ||
-      haveInitialAnimationsTriggered.current
-    )
-      return;
-
-    const { transition: initialAnimationsTransitions, ...rest } =
-      initialAnimations;
-
-    const element = componentRef.current;
-
-    const initialAnimationsControls = animate(
-      element,
-      rest,
-      initialAnimationsTransitions ?? transition
-    );
-
-    initialAnimationsControls.finished.then(() => {
-      haveInitialAnimationsTriggered.current = true;
-    });
-
-    emitMotionEvents(initialAnimationsControls);
-
-    return () => {
-      initialAnimationsControls.stop();
-
-      if (!element || !exitAnimations) return;
-
-      const { transition: exitAnimationsTransitions, ...rest } = exitAnimations;
-
-      const exitAnimationsControls = animate(
-        element,
-        rest,
-        exitAnimationsTransitions ?? transition
-      );
-
-      emitMotionEvents(exitAnimationsControls);
-    };
-  }, [initialAnimations, transition, exitAnimations, emitMotionEvents]);
+    motionAnimate(componentRef.current, rest, initialTransition ?? transition);
+  }, [initial, transition]);
 
   const Component = as as string;
 
-  return (
-    <Component
-      {...rest}
-      ref={componentRef}
-      onMouseOver={onMouseOverWithAnimation}
-      onClick={onClickWithAnimation}
-      onMouseLeave={combinedOnMouseLeave}
-      onMouseDown={combinedOnMouseDown}
-      onMouseUp={combinedOnMouseUp}
-    />
-  );
+  return <Component ref={componentRef} {...rest} />;
 };
