@@ -72,7 +72,17 @@ const PolymorphicMotion = React.forwardRef(
     }: PolymorphicMotionProps<T>,
     ref: React.ForwardedRef<PolyorphicMotionHandles>
   ) => {
+    const pendingAnimation = React.useRef<null | Promise<unknown>>(null);
     const componentRef = React.useRef<null | HTMLElement>(null);
+
+    const setPendingAnimation = React.useCallback(
+      (controls: AnimationControls) => {
+        pendingAnimation.current = controls.finished.then(() => {
+          pendingAnimation.current = null;
+        });
+      },
+      []
+    );
 
     const emitMotionEvents = React.useCallback(
       (controls: AnimationControls) => {
@@ -84,7 +94,7 @@ const PolymorphicMotion = React.forwardRef(
 
     const onMouseOverWithAnimation: React.MouseEventHandler<T> =
       React.useCallback(
-        (event) => {
+        async (event) => {
           onMouseOver?.(event);
           onHoverStart?.(event);
 
@@ -92,6 +102,7 @@ const PolymorphicMotion = React.forwardRef(
 
           const { transition: hoverAnimationsTransitions, ...rest } = hover;
 
+          await pendingAnimation.current;
           const hoverAnimationsControls = motionAnimate(
             componentRef.current,
             rest,
@@ -99,18 +110,27 @@ const PolymorphicMotion = React.forwardRef(
           );
 
           emitMotionEvents(hoverAnimationsControls);
+          setPendingAnimation(hoverAnimationsControls);
         },
-        [onMouseOver, hover, transition, emitMotionEvents, onHoverStart]
+        [
+          onMouseOver,
+          hover,
+          transition,
+          emitMotionEvents,
+          onHoverStart,
+          setPendingAnimation,
+        ]
       );
 
     const onClickWithAnimation: React.MouseEventHandler<T> = React.useCallback(
-      (event) => {
+      async (event) => {
         onClick?.(event);
 
         if (!componentRef.current || !press) return;
 
         const { transition: pressAnimationsTransitions, ...rest } = press;
 
+        await pendingAnimation.current;
         const pressAnimationsControls = motionAnimate(
           componentRef.current,
           rest,
@@ -118,8 +138,9 @@ const PolymorphicMotion = React.forwardRef(
         );
 
         emitMotionEvents(pressAnimationsControls);
+        setPendingAnimation(pressAnimationsControls);
       },
-      [onClick, press, transition, emitMotionEvents]
+      [onClick, press, transition, emitMotionEvents, setPendingAnimation]
     );
 
     const combinedOnMouseLeave: React.MouseEventHandler<T> = React.useCallback(
@@ -145,17 +166,24 @@ const PolymorphicMotion = React.forwardRef(
 
         const { transition: exitTransition, ...rest } = exit;
 
+        await pendingAnimation.current;
         const controls = motionAnimate(
           componentRef.current,
           rest,
           exitTransition ?? transition
         );
 
+        setPendingAnimation(controls);
+
         await controls.finished;
       },
     });
 
-    React.useImperativeHandle(ref, createHandles, [exit, transition]);
+    React.useImperativeHandle(ref, createHandles, [
+      exit,
+      transition,
+      setPendingAnimation,
+    ]);
 
     usePreviousValueEffect(
       (from, to) => {
@@ -184,14 +212,21 @@ const PolymorphicMotion = React.forwardRef(
             }
           );
 
-          motionAnimate(
-            componentRef.current,
-            Object.fromEntries(merged),
-            animateFromTransition ?? transition
-          );
+          const animate = async () => {
+            await pendingAnimation.current;
+            const controls = motionAnimate(
+              componentRef.current as HTMLElement,
+              Object.fromEntries(merged),
+              animateFromTransition ?? transition
+            );
+
+            setPendingAnimation(controls);
+          };
+
+          animate();
         }
       },
-      [animate]
+      [animate, setPendingAnimation]
     );
 
     React.useEffect(() => {
@@ -199,12 +234,18 @@ const PolymorphicMotion = React.forwardRef(
 
       const { transition: initialTransition, ...rest } = initial;
 
-      motionAnimate(
-        componentRef.current,
-        rest,
-        initialTransition ?? transition
-      );
-    }, [initial, transition]);
+      const animate = async () => {
+        await pendingAnimation.current;
+        const controls = motionAnimate(
+          componentRef.current as HTMLElement,
+          rest,
+          initialTransition ?? transition
+        );
+        setPendingAnimation(controls);
+      };
+
+      animate();
+    }, [initial, transition, setPendingAnimation]);
 
     const Component = as as React.ElementType;
 
