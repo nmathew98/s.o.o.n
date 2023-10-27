@@ -16,8 +16,8 @@ export type Motion = {
 
 export const Motion: Motion = new Proxy(Object.create(null), {
   get:
-    <T extends keyof React.ElementType>(_: never, as: T) =>
-    (props: React.DetailedHTMLProps<React.HTMLAttributes<T>, T>) =>
+    <T extends keyof React.JSX.IntrinsicElements>(_: never, as: T) =>
+    (props: Omit<PolymorphicMotionProps<T>, "as">) =>
       PolymorphicMotion({
         as,
         ...props,
