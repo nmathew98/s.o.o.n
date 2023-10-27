@@ -9,7 +9,9 @@ import React from "react";
 import { usePreviousValueEffect } from "../hooks/use-previous-value-effect";
 
 export type Motion = {
-  [K in keyof React.ElementType]: React.FC<React.ElementType[K]>;
+  [K in keyof React.JSX.IntrinsicElements]: React.FC<
+    Omit<PolymorphicMotionProps<K>, "as">
+  >;
 };
 
 export const Motion: Motion = new Proxy(Object.create(null), {
@@ -22,7 +24,7 @@ export const Motion: Motion = new Proxy(Object.create(null), {
       } as PolymorphicMotionProps<T>),
 });
 
-type PolymorphicMotionProps<T extends keyof React.ElementType> = {
+type PolymorphicMotionProps<T extends keyof React.JSX.IntrinsicElements> = {
   as: T;
   ref?: React.Ref<PolyorphicMotionHandles>;
   initial?: KeyframesDefinition;
@@ -37,7 +39,7 @@ type PolymorphicMotionProps<T extends keyof React.ElementType> = {
   onHoverEnd?: React.MouseEventHandler<T>;
   onPressStart?: React.MouseEventHandler<T>;
   onPressEnd?: React.MouseEventHandler<T>;
-} & React.DetailedHTMLProps<React.HTMLAttributes<T>, T>;
+} & Omit<React.DetailedHTMLProps<React.HTMLAttributes<T>, T>, "ref">;
 
 type KeyframesDefinition = {
   [K in keyof CSSStyleDeclarationWithTransform]?: ValueKeyframe;
@@ -48,7 +50,7 @@ export interface PolyorphicMotionHandles {
 }
 
 const PolymorphicMotion = React.forwardRef(
-  <T extends keyof React.ElementType>(
+  <T extends keyof React.JSX.IntrinsicElements>(
     {
       as,
       initial,
