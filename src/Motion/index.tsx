@@ -9,12 +9,12 @@ import React from "react";
 import { usePreviousValueEffect } from "../hooks/use-previous-value-effect";
 
 export type Motion = {
-  [K in keyof JSX.IntrinsicElements]: React.FC<JSX.IntrinsicElements[K]>;
+  [K in keyof React.ElementType]: React.FC<React.ElementType[K]>;
 };
 
 export const Motion: Motion = new Proxy(Object.create(null), {
   get:
-    <T extends keyof React.JSX.IntrinsicElements>(_: never, as: T) =>
+    <T extends keyof React.ElementType>(_: never, as: T) =>
     (props: React.DetailedHTMLProps<React.HTMLAttributes<T>, T>) =>
       PolymorphicMotion({
         as,
@@ -22,7 +22,7 @@ export const Motion: Motion = new Proxy(Object.create(null), {
       } as PolymorphicMotionProps<T>),
 });
 
-type PolymorphicMotionProps<T extends keyof React.JSX.IntrinsicElements> = {
+type PolymorphicMotionProps<T extends keyof React.ElementType> = {
   as: T;
   ref?: React.Ref<PolyorphicMotionHandles>;
   initial?: KeyframesDefinition;
@@ -48,7 +48,7 @@ export interface PolyorphicMotionHandles {
 }
 
 const PolymorphicMotion = React.forwardRef(
-  <T extends keyof JSX.IntrinsicElements>(
+  <T extends keyof React.ElementType>(
     {
       as,
       initial,
@@ -74,6 +74,89 @@ const PolymorphicMotion = React.forwardRef(
   ) => {
     const componentRef = React.useRef<null | HTMLElement>(null);
 
+    const emitMotionEvents = React.useCallback(
+      (controls: AnimationControls) => {
+        onMotionStart?.(controls);
+        controls.finished.then(() => onMotionEnd?.(controls));
+      },
+      [onMotionStart, onMotionEnd]
+    );
+
+    const onMouseOverWithAnimation: React.MouseEventHandler<T> =
+      React.useCallback(
+        (event) => {
+          onMouseOver?.(event);
+          onHoverStart?.(event);
+
+          if (!componentRef.current || !hover) return;
+
+          const { transition: hoverAnimationsTransitions, ...rest } = hover;
+
+          const hoverAnimationsControls = motionAnimate(
+            componentRef.current,
+            rest,
+            hoverAnimationsTransitions ?? transition
+          );
+
+          emitMotionEvents(hoverAnimationsControls);
+        },
+        [onMouseOver, hover, transition, emitMotionEvents, onHoverStart]
+      );
+
+    const onClickWithAnimation: React.MouseEventHandler<T> = React.useCallback(
+      (event) => {
+        onClick?.(event);
+
+        if (!componentRef.current || !press) return;
+
+        const { transition: pressAnimationsTransitions, ...rest } = press;
+
+        const pressAnimationsControls = motionAnimate(
+          componentRef.current,
+          rest,
+          pressAnimationsTransitions ?? transition
+        );
+
+        emitMotionEvents(pressAnimationsControls);
+      },
+      [onClick, press, transition, emitMotionEvents]
+    );
+
+    const combinedOnMouseLeave: React.MouseEventHandler<T> = React.useCallback(
+      (event) =>
+        [onMouseLeave, onHoverEnd].forEach((handler) => handler?.(event)),
+      [onMouseLeave, onHoverEnd]
+    );
+
+    const combinedOnMouseDown: React.MouseEventHandler<T> = React.useCallback(
+      (event) =>
+        [onMouseDown, onPressStart].forEach((handler) => handler?.(event)),
+      [onMouseDown, onPressStart]
+    );
+
+    const combinedOnMouseUp: React.MouseEventHandler<T> = React.useCallback(
+      (event) => [onMouseUp, onPressEnd].forEach((handler) => handler?.(event)),
+      [onMouseUp, onPressEnd]
+    );
+
+    const createHandles = (): PolyorphicMotionHandles => ({
+      animateExit: async () => {
+        if (!componentRef.current || !exit) return;
+
+        const { transition: exitTransition, ...rest } = exit;
+
+        const controls = motionAnimate(
+          componentRef.current,
+          rest,
+          exitTransition ?? transition
+        );
+
+        await controls.finished;
+      },
+    });
+
+    React.useImperativeHandle(ref, createHandles, [exit, transition]);
+
     usePreviousValueEffect(
       (from, to) => {
         if (
@@ -86,13 +169,20 @@ const PolymorphicMotion = React.forwardRef(
 
           const { transition: animateFromTransition, ...rest } = animateFrom;
           const animateFromEntries = Object.entries(rest);
+          const newEntriesFromFinal = Object.entries(animateTo).filter(
+            ([k]) =>
+              k !== "transition" ||
+              animateFromEntries.some(([fromK]) => fromK !== k)
+          );
 
-          const merged = animateFromEntries.map(([key, initialValue]) => {
-            const finalValue =
-              animateTo[key as keyof CSSStyleDeclarationWithTransform];
+          const merged = [...animateFromEntries, ...newEntriesFromFinal].map(
+            ([key, initialValue]) => {
+              const finalValue =
+                animateTo[key as keyof CSSStyleDeclarationWithTransform];
 
-            return [key, [initialValue, finalValue]];
-          });
+              return [key, [initialValue, finalValue]];
+            }
+          );
 
           motionAnimate(
             componentRef.current,
@@ -116,26 +206,18 @@ const PolymorphicMotion = React.forwardRef(
       );
     }, [initial, transition]);
 
-    const createHandles = (): PolyorphicMotionHandles => ({
-      animateExit: async () => {
-        if (!componentRef.current || !exit) return;
+    const Component = as as React.ElementType;
 
-        const { transition: exitTransition, ...rest } = exit;
-
-        const controls = motionAnimate(
-          componentRef.current,
-          rest,
-          exitTransition ?? transition
-        );
-
-        await controls.finished;
-      },
-    });
-
-    React.useImperativeHandle(ref, createHandles, [exit, transition]);
-
-    const Component = as as string;
-
-    return <Component ref={componentRef} {...rest} />;
+    return (
+      <Component
+        {...rest}
+        ref={componentRef}
+        onMouseOver={onMouseOverWithAnimation}
+        onClick={onClickWithAnimation}
+        onMouseLeave={combinedOnMouseLeave}
+        onMouseDown={combinedOnMouseDown}
+        onMouseUp={combinedOnMouseUp}
+      />
+    );
   }
 );
