@@ -30,10 +30,10 @@ type PolymorphicMotionProps<T extends keyof JSX.IntrinsicElements> = {
   transition?: AnimationOptionsWithOverrides;
   onMotionStart?: (controls: AnimationControls) => void;
   onMotionEnd?: (controls: AnimationControls) => void;
-  onHoverStart?: (event: React.MouseEvent) => void;
-  onHoverEnd?: (event: React.MouseEvent) => void;
-  onPressStart?: (event: React.MouseEvent) => void;
-  onPressEnd?: (event: React.MouseEvent) => void;
+  onHoverStart?: React.MouseEventHandler<T>;
+  onHoverEnd?: React.MouseEventHandler<T>;
+  onPressStart?: React.MouseEventHandler<T>;
+  onPressEnd?: React.MouseEventHandler<T>;
 } & JSX.IntrinsicElements[T];
 
 interface KeyframesDefinition extends MotionKeyframesDefinition {
@@ -72,34 +72,33 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
     [onMotionStart, onMotionEnd]
   );
 
-  const Component = as as string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onMouseOverWithAnimation: React.MouseEventHandler<any> =
+    React.useCallback(
+      (event) => {
+        onMouseOver?.(event);
+        onHoverStart?.(event);
 
-  const onMouseOverWithAnimation = React.useCallback(
-    (event: React.MouseEvent) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onMouseOver?.(event as any);
-      onHoverStart?.(event);
+        if (!componentRef.current || !hoverAnimations) return;
 
-      if (!componentRef.current || !hoverAnimations) return;
+        const { transition: hoverAnimationsTransitions, ...rest } =
+          hoverAnimations;
 
-      const { transition: hoverAnimationsTransitions, ...rest } =
-        hoverAnimations;
+        const hoverAnimationsControls = animate(
+          componentRef.current,
+          rest,
+          hoverAnimationsTransitions ?? transition
+        );
 
-      const hoverAnimationsControls = animate(
-        componentRef.current,
-        rest,
-        hoverAnimationsTransitions ?? transition
-      );
+        emitMotionEvents(hoverAnimationsControls);
+      },
+      [onMouseOver, hoverAnimations, transition, emitMotionEvents, onHoverStart]
+    );
 
-      emitMotionEvents(hoverAnimationsControls);
-    },
-    [onMouseOver, hoverAnimations, transition, emitMotionEvents, onHoverStart]
-  );
-
-  const onClickWithAnimation = React.useCallback(
-    (event: React.MouseEvent) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onClick?.(event as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onClickWithAnimation: React.MouseEventHandler<any> = React.useCallback(
+    (event) => {
+      onClick?.(event);
 
       if (!componentRef.current || !pressAnimations) return;
 
@@ -117,24 +116,23 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
     [onClick, pressAnimations, transition, emitMotionEvents]
   );
 
-  const combinedOnMouseLeave = React.useCallback(
-    (event: React.MouseEvent) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [onMouseLeave, onHoverEnd].forEach((handler) => handler?.(event as any)),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const combinedOnMouseLeave: React.MouseEventHandler<any> = React.useCallback(
+    (event) =>
+      [onMouseLeave, onHoverEnd].forEach((handler) => handler?.(event)),
     [onMouseLeave, onHoverEnd]
   );
 
-  const combinedOnMouseDown = React.useCallback(
-    (event: React.MouseEvent) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [onMouseDown, onPressStart].forEach((handler) => handler?.(event as any)),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const combinedOnMouseDown: React.MouseEventHandler<any> = React.useCallback(
+    (event) =>
+      [onMouseDown, onPressStart].forEach((handler) => handler?.(event)),
     [onMouseDown, onPressStart]
   );
 
-  const combinedOnMouseUp = React.useCallback(
-    (event: React.MouseEvent) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [onMouseUp, onPressEnd].forEach((handler) => handler?.(event as any)),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const combinedOnMouseUp: React.MouseEventHandler<any> = React.useCallback(
+    (event) => [onMouseUp, onPressEnd].forEach((handler) => handler?.(event)),
     [onMouseUp, onPressEnd]
   );
 
@@ -162,7 +160,12 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
     return () => {
       alwaysAnimationsControls.stop();
 
-      if (!element || !exitAnimations || initialAnimations) return;
+      if (
+        !element ||
+        !exitAnimations ||
+        (initialAnimations && !haveInitialAnimationsTriggered.current)
+      )
+        return;
 
       const { transition: exitAnimationsTransitions, ...rest } = exitAnimations;
 
@@ -195,7 +198,9 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
       initialAnimationsTransitions ?? transition
     );
 
-    haveInitialAnimationsTriggered.current = true;
+    initialAnimationsControls.finished.then(() => {
+      haveInitialAnimationsTriggered.current = true;
+    });
 
     emitMotionEvents(initialAnimationsControls);
 
@@ -215,6 +220,8 @@ const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
       emitMotionEvents(exitAnimationsControls);
     };
   }, [initialAnimations, transition, exitAnimations, emitMotionEvents]);
+
+  const Component = as as string;
 
   return (
     <Component
