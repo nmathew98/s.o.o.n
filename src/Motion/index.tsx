@@ -14,16 +14,17 @@ export type Motion = {
 
 export const Motion: Motion = new Proxy(Object.create(null), {
   get:
-    <T extends keyof JSX.IntrinsicElements>(_: never, as: T) =>
-    (props: JSX.IntrinsicElements[T]) =>
+    <T extends keyof React.JSX.IntrinsicElements>(_: never, as: T) =>
+    (props: React.DetailedHTMLProps<React.HTMLAttributes<T>, T>) =>
       PolymorphicMotion({
         as,
         ...props,
       } as PolymorphicMotionProps<T>),
 });
 
-type PolymorphicMotionProps<T extends keyof JSX.IntrinsicElements> = {
+type PolymorphicMotionProps<T extends keyof React.JSX.IntrinsicElements> = {
   as: T;
+  ref?: React.Ref<PolyorphicMotionHandles>;
   initial?: KeyframesDefinition;
   animate?: KeyframesDefinition;
   hover?: KeyframesDefinition;
@@ -36,70 +37,105 @@ type PolymorphicMotionProps<T extends keyof JSX.IntrinsicElements> = {
   onHoverEnd?: React.MouseEventHandler<T>;
   onPressStart?: React.MouseEventHandler<T>;
   onPressEnd?: React.MouseEventHandler<T>;
-} & JSX.IntrinsicElements[T];
+} & React.DetailedHTMLProps<React.HTMLAttributes<T>, T>;
 
 type KeyframesDefinition = {
   [K in keyof CSSStyleDeclarationWithTransform]?: ValueKeyframe;
 } & { transition?: AnimationOptionsWithOverrides };
 
-const PolymorphicMotion = <T extends keyof JSX.IntrinsicElements>({
-  as,
-  initial,
-  animate,
-  hover,
-  press,
-  exit,
-  transition,
-  onMouseUp,
-  onMouseDown,
-  onMouseLeave,
-  onMouseOver,
-  onClick,
-  onMotionStart,
-  onMotionEnd,
-  onHoverStart,
-  onHoverEnd,
-  onPressStart,
-  onPressEnd,
-  ...rest
-}: PolymorphicMotionProps<T>) => {
-  const componentRef = React.useRef<null | HTMLElement>(null);
+export interface PolyorphicMotionHandles {
+  animateExit: () => Promise<void>;
+}
 
-  usePreviousValueEffect(
-    (from, to) => {
-      if (componentRef.current && from?.every(Boolean) && to?.every(Boolean)) {
-        const [animateFrom] = from as [KeyframesDefinition];
-        const [animateTo] = to as [KeyframesDefinition];
+const PolymorphicMotion = React.forwardRef(
+  <T extends keyof JSX.IntrinsicElements>(
+    {
+      as,
+      initial,
+      animate,
+      hover,
+      press,
+      exit,
+      transition,
+      onMouseUp,
+      onMouseDown,
+      onMouseLeave,
+      onMouseOver,
+      onClick,
+      onMotionStart,
+      onMotionEnd,
+      onHoverStart,
+      onHoverEnd,
+      onPressStart,
+      onPressEnd,
+      ...rest
+    }: PolymorphicMotionProps<T>,
+    ref: React.ForwardedRef<PolyorphicMotionHandles>
+  ) => {
+    const componentRef = React.useRef<null | HTMLElement>(null);
 
-        const { transition: animateFromTransition, ...rest } = animateFrom;
-        const animateFromEntries = Object.entries(rest);
+    usePreviousValueEffect(
+      (from, to) => {
+        if (
+          componentRef.current &&
+          from?.every(Boolean) &&
+          to?.every(Boolean)
+        ) {
+          const [animateFrom] = from as [KeyframesDefinition];
+          const [animateTo] = to as [KeyframesDefinition];
 
-        const merged = animateFromEntries.map(([key, initialValue]) => {
-          const finalValue =
-            animateTo[key as keyof CSSStyleDeclarationWithTransform];
+          const { transition: animateFromTransition, ...rest } = animateFrom;
+          const animateFromEntries = Object.entries(rest);
 
-          return [key, [initialValue, finalValue]];
-        });
+          const merged = animateFromEntries.map(([key, initialValue]) => {
+            const finalValue =
+              animateTo[key as keyof CSSStyleDeclarationWithTransform];
 
-        motionAnimate(
+            return [key, [initialValue, finalValue]];
+          });
+
+          motionAnimate(
+            componentRef.current,
+            Object.fromEntries(merged),
+            animateFromTransition ?? transition
+          );
+        }
+      },
+      [animate]
+    );
+
+    React.useEffect(() => {
+      if (!componentRef.current || !initial) return;
+
+      const { transition: initialTransition, ...rest } = initial;
+
+      motionAnimate(
+        componentRef.current,
+        rest,
+        initialTransition ?? transition
+      );
+    }, [initial, transition]);
+
+    const createHandles = (): PolyorphicMotionHandles => ({
+      animateExit: async () => {
+        if (!componentRef.current || !exit) return;
+
+        const { transition: exitTransition, ...rest } = exit;
+
+        const controls = motionAnimate(
           componentRef.current,
-          Object.fromEntries(merged),
-          animateFromTransition ?? transition
+          rest,
+          exitTransition ?? transition
         );
-      }
-    },
-    [animate]
-  );
 
-  React.useEffect(() => {
-    if (!componentRef.current || !initial) return;
+        await controls.finished;
+      },
+    });
 
-    const { transition: initialTransition, ...rest } = initial;
+    React.useImperativeHandle(ref, createHandles, [exit, transition]);
 
-    motionAnimate(componentRef.current, rest, initialTransition ?? transition);
-  }, [initial, transition]);
+    const Component = as as string;
 
-  const Component = as as string;
-
-  return <Component ref={componentRef} {...rest} />;
-};
+    return <Component ref={componentRef} {...rest} />;
+  }
+);
