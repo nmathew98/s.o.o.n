@@ -201,8 +201,8 @@ const PolymorphicMotion = React.forwardRef(
           const animateFromEntries = Object.entries(rest);
           const newEntriesFromFinal = Object.entries(animateTo).filter(
             ([k]) =>
-              k !== "transition" ||
-              animateFromEntries.some(([fromK]) => fromK !== k)
+              k !== "transition" &&
+              animateFromEntries.every(([fromK]) => fromK !== k)
           );
 
           const merged = [...animateFromEntries, ...newEntriesFromFinal].map(
@@ -243,6 +243,7 @@ const PolymorphicMotion = React.forwardRef(
           rest,
           initialTransition ?? transition
         );
+
         setPendingAnimation(controls);
       };
 
