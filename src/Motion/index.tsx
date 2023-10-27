@@ -2,8 +2,8 @@ import {
   type AnimationControls,
   type AnimationOptionsWithOverrides,
   type CSSStyleDeclarationWithTransform,
+  type ValueKeyframe,
   animate as motionAnimate,
-  ValueKeyframe,
 } from "motion";
 import React from "react";
 import { usePreviousValueEffect } from "../hooks/use-previous-value-effect";
@@ -26,7 +26,7 @@ export const Motion: Motion = new Proxy(Object.create(null), {
 
 type PolymorphicMotionProps<T extends keyof React.JSX.IntrinsicElements> = {
   as: T;
-  ref?: React.Ref<PolyorphicMotionHandles>;
+  ref?: React.Ref<PolymorphicMotionHandles>;
   initial?: KeyframesDefinition;
   animate?: KeyframesDefinition;
   hover?: KeyframesDefinition;
@@ -45,7 +45,7 @@ type KeyframesDefinition = {
   [K in keyof CSSStyleDeclarationWithTransform]?: ValueKeyframe;
 } & { transition?: AnimationOptionsWithOverrides };
 
-export interface PolyorphicMotionHandles {
+export interface PolymorphicMotionHandles {
   animateExit: () => Promise<void>;
 }
 
@@ -72,7 +72,7 @@ const PolymorphicMotion = React.forwardRef(
       onPressEnd,
       ...rest
     }: PolymorphicMotionProps<T>,
-    ref: React.ForwardedRef<PolyorphicMotionHandles>
+    ref: React.ForwardedRef<PolymorphicMotionHandles>
   ) => {
     const pendingAnimation = React.useRef<null | Promise<unknown>>(null);
     const componentRef = React.useRef<null | HTMLElement>(null);
@@ -162,7 +162,7 @@ const PolymorphicMotion = React.forwardRef(
       [onMouseUp, onPressEnd]
     );
 
-    const createHandles = (): PolyorphicMotionHandles => ({
+    const createHandles = (): PolymorphicMotionHandles => ({
       animateExit: async () => {
         if (!componentRef.current || !exit) return;
 
