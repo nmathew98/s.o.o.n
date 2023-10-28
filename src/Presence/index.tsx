@@ -24,20 +24,6 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			return void (isInitialRender.current = false);
 		}
 
-		const setNthChild = (
-			initialChild: MotionChildWithKey,
-			currentChild: MotionChildWithKey,
-		) =>
-			setChildrenToRender(children =>
-				children.map(child => {
-					if (child.key === initialChild.key) {
-						return currentChild;
-					}
-
-					return child;
-				}),
-			);
-
 		// If `exitBeforeEnter` then we wait until all children
 		// have been animated out and only then do we add in the pending children
 		const animateExitBeforeEnter =
@@ -70,6 +56,20 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 						]);
 					}
 				});
+
+		const setNthChild = (
+			initialChild: MotionChildWithKey,
+			currentChild: MotionChildWithKey,
+		) =>
+			setChildrenToRender(children =>
+				children.map(child => {
+					if (child.key === initialChild.key) {
+						return currentChild;
+					}
+
+					return child;
+				}),
+			);
 
 		// If `!exitBeforeEnter` then we add in pending children as each rendered element
 		// is animated out
@@ -110,12 +110,34 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				});
 
 				if (pendingChildren.current.length > 0) {
-					setNthChild(
+					setNthPlusOneChild(
 						child,
 						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
 					);
 				}
 			};
+
+		const setNthPlusOneChild = (
+			initialChild: MotionChildWithKey,
+			currentChild: MotionChildWithKey,
+		) =>
+			setChildrenToRender(children => {
+				const initialChildIdx = children.findIndex(
+					child => child.key === initialChild.key,
+				);
+
+				if (~initialChildIdx) {
+					return children;
+				}
+
+				const withCurrentChild = [
+					...children.slice(0, initialChildIdx + 1),
+					currentChild,
+					...children.slice(initialChildIdx + 1),
+				];
+
+				return withCurrentChild;
+			});
 
 		// In both cases, an exiting element is paired with a pending element
 		// and if there are more pending children than there are exiting
