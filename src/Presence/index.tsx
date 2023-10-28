@@ -49,24 +49,22 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		) =>
 		(instance: PolymorphicMotionHandles) =>
 			instance.animateExit().then(() => {
-				if (idx === exitingChildren.length - 1) {
+				if (idx === exitingChildren.length - 1)
 					exitingChildren.forEach(child => {
 						setNthChild(
 							child,
 							pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
 						);
 					});
-				}
 
 				if (
 					idx === exitingChildren.length - 1 &&
 					pendingChildren.current.length > exitingChildren.length
-				) {
+				)
 					setChildrenToRender(children => [
 						...children,
 						...pendingChildren.current.splice(0),
 					]);
-				}
 			});
 
 	// If `!exitBeforeEnter` then we add in pending children as each rendered element
@@ -79,22 +77,20 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		) =>
 		(instance: PolymorphicMotionHandles) =>
 			instance.animateExit().then(() => {
-				if (pendingChildren.current.length > 0) {
+				if (pendingChildren.current.length > 0)
 					setNthChild(
 						child,
 						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
 					);
-				}
 
 				if (
 					pendingChildren.current.length &&
 					idx === exitingChildren.length - 1
-				) {
+				)
 					setChildrenToRender(children => [
 						...children,
 						...pendingChildren.current.splice(0),
 					]);
-				}
 			});
 
 	// In both cases, an exiting element is paired with a pending element
@@ -145,11 +141,11 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 		const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
 
-		return childrenToRender.map(child => {
-			if (!exitingChildrenDiffLookup.has(child.key)) return child;
-
-			return exitingChildrenDiffLookup.get(child.key) as MotionChildWithKey;
-		});
+		return childrenToRender.map(child =>
+			exitingChildrenDiffLookup.has(child.key)
+				? (exitingChildrenDiffLookup.get(child.key) as MotionChildWithKey)
+				: child,
+		);
 	});
 
 	return childrenToRender;
