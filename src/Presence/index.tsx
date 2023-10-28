@@ -20,7 +20,9 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	const pendingChildren = React.useRef<MotionChildWithKey[]>([]);
 
 	React.useEffect(() => {
-		if (isInitialRender.current) return void (isInitialRender.current = false);
+		if (isInitialRender.current) {
+			return void (isInitialRender.current = false);
+		}
 
 		const setNthChild = (
 			initialChild: MotionChildWithKey,
@@ -28,7 +30,9 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		) =>
 			setChildrenToRender(children =>
 				children.map(child => {
-					if (child.key === initialChild.key) return currentChild;
+					if (child.key === initialChild.key) {
+						return currentChild;
+					}
 
 					return child;
 				}),
@@ -45,7 +49,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			) =>
 			(instance: PolymorphicMotionHandles) =>
 				instance.animateExit().then(() => {
-					if (idx === exitingChildrenKeys.size - 1)
+					if (idx === exitingChildrenKeys.size - 1) {
 						exitingChildren.forEach(child => {
 							setNthChild(
 								child,
@@ -54,15 +58,17 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 									.pop() as MotionChildWithKey,
 							);
 						});
+					}
 
 					if (
 						pendingChildren.current.length &&
 						idx === exitingChildrenKeys.size - 1
-					)
+					) {
 						setChildrenToRender(children => [
 							...children.filter(child => exitingChildrenKeys.has(child.key)),
 							...pendingChildren.current.splice(0),
 						]);
+					}
 				});
 
 		// If `!exitBeforeEnter` then we add in pending children as each rendered element
@@ -103,11 +109,12 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 					}
 				});
 
-				if (pendingChildren.current.length > 0)
+				if (pendingChildren.current.length > 0) {
 					setNthChild(
 						child,
 						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
 					);
+				}
 			};
 
 		// In both cases, an exiting element is paired with a pending element
@@ -131,8 +138,9 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				child => !currentChildrenLookup.has(child.key),
 			);
 
-			if (!exitingChildrenDiff.length && !pendingChildren.current.length)
+			if (!exitingChildrenDiff.length && !pendingChildren.current.length) {
 				return childrenToRender;
+			}
 
 			if (!exitingChildrenDiff.length && pendingChildren.current.length) {
 				const updatedChildrenToRender = [
