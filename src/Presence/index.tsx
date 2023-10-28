@@ -105,6 +105,11 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		: animateExitAndEnter;
 
 	setChildrenToRender(childrenToRender => {
+		// This state update should only run when there are no `pendingChildren`
+		// which means that all pending updates from exiting elements
+		// have been applied
+		if (pendingChildren.current.length) return childrenToRender;
+
 		const renderedChildrenLookup = createLookup(childrenToRender);
 
 		const currentChildren = filterMotionElementsWithKeys(children);
@@ -127,8 +132,16 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		if (!exitingChildrenDiff.length && !pendingChildren.current.length)
 			return childrenToRender;
 
-		if (!exitingChildrenDiff.length && pendingChildren.current.length)
-			return [...childrenToRender, ...pendingChildren.current];
+		if (!exitingChildrenDiff.length && pendingChildren.current.length) {
+			const updatedChildrenToRender = [
+				...childrenToRender,
+				...pendingChildren.current,
+			];
+
+			pendingChildren.current = [];
+
+			return updatedChildrenToRender;
+		}
 
 		const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
 
