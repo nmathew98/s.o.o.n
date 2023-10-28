@@ -41,11 +41,11 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				_: MotionChildWithKey,
 				idx: number,
 				exitingChildren: MotionChildWithKey[],
-				exitingChildrenLookup: Map<string, MotionChildWithKey>,
+				exitingChildrenKeys: Set<string>,
 			) =>
 			(instance: PolymorphicMotionHandles) =>
 				instance.animateExit().then(() => {
-					if (idx === exitingChildren.length - 1)
+					if (idx === exitingChildrenKeys.size - 1)
 						exitingChildren.forEach(child => {
 							setNthChild(
 								child,
@@ -57,10 +57,10 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 					if (
 						pendingChildren.current.length &&
-						idx === exitingChildrenLookup.size - 1
+						idx === exitingChildrenKeys.size - 1
 					)
 						setChildrenToRender(children => [
-							...children.filter(child => exitingChildrenLookup.has(child.key)),
+							...children.filter(child => exitingChildrenKeys.has(child.key)),
 							...pendingChildren.current.splice(0),
 						]);
 				});
@@ -71,24 +71,24 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			(
 				child: MotionChildWithKey,
 				idx: number,
-				exitingChildren: MotionChildWithKey[],
-				exitingChildrenLookup: Map<string, MotionChildWithKey>,
+				_: MotionChildWithKey[],
+				exitingChildrenKeys: Set<string>,
 			) =>
 			(instance: PolymorphicMotionHandles) => {
 				const initialNumberOfPendingChildren = pendingChildren.current.length;
 
 				instance.animateExit().then(() => {
-					if (idx === exitingChildren.length - 1) {
+					if (idx === exitingChildrenKeys.size - 1) {
 						setChildrenToRender(childrenToRender =>
 							childrenToRender.filter(child =>
-								exitingChildrenLookup.has(child.key),
+								exitingChildrenKeys.has(child.key),
 							),
 						);
 					}
 
 					if (
 						pendingChildren.current.length > 0 &&
-						idx === exitingChildrenLookup.size - 1
+						idx === exitingChildrenKeys.size - 1
 					) {
 						const finalNumberOfPendingChildren = pendingChildren.current.length;
 						const hasNextPendingChildBeenAdded =
@@ -127,20 +127,20 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				child => !renderedChildrenLookup.has(child.key),
 			);
 
-			const exitingChildrenDiff = childrenToRender
-				.filter(child => !currentChildrenLookup.has(child.key))
-				.map(
-					(child, idx, exitingChildren) =>
-						React.cloneElement(child, {
-							...child.props,
-							ref: animateExit(
-								child,
-								idx,
-								exitingChildren,
-								exitingChildrenDiffLookup,
-							),
-						}) as MotionChildWithKey,
-				);
+			const exitingChildrenDiff = childrenToRender.filter(
+				child => !currentChildrenLookup.has(child.key),
+			);
+
+			const exitingChildrenKeys = new Set(
+				exitingChildrenDiff.map(child => child.key),
+			);
+			const exitingChildren = exitingChildrenDiff.map(
+				(child, idx, exitingChildren) =>
+					React.cloneElement(child, {
+						...child.props,
+						ref: animateExit(child, idx, exitingChildren, exitingChildrenKeys),
+					}) as MotionChildWithKey,
+			);
 
 			if (!exitingChildrenDiff.length && !pendingChildren.current.length)
 				return childrenToRender;
@@ -156,7 +156,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				return updatedChildrenToRender;
 			}
 
-			const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
+			const exitingChildrenDiffLookup = createLookup(exitingChildren);
 
 			return childrenToRender.map(child =>
 				exitingChildrenDiffLookup.has(child.key)
