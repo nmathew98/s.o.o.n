@@ -64,7 +64,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				) {
 					setChildrenToRender(children => [
 						...children,
-						...pendingChildren.current.slice(exitingChildren.length),
+						...pendingChildren.current.splice(0),
 					]);
 				}
 			});
@@ -92,7 +92,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				) {
 					setChildrenToRender(children => [
 						...children,
-						...pendingChildren.current,
+						...pendingChildren.current.splice(0),
 					]);
 				}
 			});
