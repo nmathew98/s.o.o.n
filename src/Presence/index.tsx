@@ -31,11 +31,11 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				_: MotionChildWithKey,
 				idx: number,
 				exitingChildren: MotionChildWithKey[],
-				exitingChildrenKeys: Map<string, MotionChildWithKey>,
+				exitingChildrenLookup: Map<string, MotionChildWithKey>,
 			) =>
 			(instance: PolymorphicMotionHandles) =>
 				instance.animateExit().then(() => {
-					if (idx === exitingChildrenKeys.size - 1) {
+					if (idx === exitingChildrenLookup.size - 1) {
 						exitingChildren.forEach(child => {
 							setNthChild(
 								child,
@@ -48,10 +48,10 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 					if (
 						pendingChildren.current.length &&
-						idx === exitingChildrenKeys.size - 1
+						idx === exitingChildrenLookup.size - 1
 					) {
 						setChildrenToRender(children => [
-							...children.filter(child => exitingChildrenKeys.has(child.key)),
+							...children.filter(child => exitingChildrenLookup.has(child.key)),
 							...pendingChildren.current.splice(0),
 						]);
 					}
@@ -78,23 +78,23 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				child: MotionChildWithKey,
 				idx: number,
 				_: MotionChildWithKey[],
-				exitingChildrenKeys: Map<string, MotionChildWithKey>,
+				exitingChildrenLookup: Map<string, MotionChildWithKey>,
 			) =>
 			(instance: PolymorphicMotionHandles) => {
 				const initialNumberOfPendingChildren = pendingChildren.current.length;
 
 				instance.animateExit().then(() => {
-					if (idx === exitingChildrenKeys.size - 1) {
+					if (idx === exitingChildrenLookup.size - 1) {
 						setChildrenToRender(childrenToRender =>
 							childrenToRender.filter(child =>
-								exitingChildrenKeys.has(child.key),
+								exitingChildrenLookup.has(child.key),
 							),
 						);
 					}
 
 					if (
 						pendingChildren.current.length > 0 &&
-						idx === exitingChildrenKeys.size - 1
+						idx === exitingChildrenLookup.size - 1
 					) {
 						const finalNumberOfPendingChildren = pendingChildren.current.length;
 						const hasNextPendingChildBeenAdded =
