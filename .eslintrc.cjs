@@ -13,6 +13,7 @@ module.exports = {
 	rules: {
 		"prettier/prettier": ["error", { usePrettierrc: true }],
 		"@typescript-eslint/no-explicit-any": 0,
+		"@typescript-eslint/no-unused-vars": 1,
 		"react-refresh/only-export-components": [
 			"warn",
 			{ allowConstantExport: true },
