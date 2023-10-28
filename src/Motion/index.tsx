@@ -195,14 +195,8 @@ export const PolymorphicMotion = React.forwardRef(
 			},
 		});
 
-		React.useImperativeHandle(ref, createHandles, [
-			exit,
-			transition,
-			setPendingAnimation,
-		]);
-
-		usePreviousValueEffect(
-			(from, to) => {
+		const onChangeAnimate = React.useCallback(
+			(from?: React.DependencyList, to?: React.DependencyList) => {
 				if (
 					componentRef.current &&
 					from?.every(Boolean) &&
@@ -242,8 +236,16 @@ export const PolymorphicMotion = React.forwardRef(
 					runAnimation();
 				}
 			},
-			[animate, setPendingAnimation],
+			[setPendingAnimation, transition],
 		);
+
+		React.useImperativeHandle(ref, createHandles, [
+			exit,
+			transition,
+			setPendingAnimation,
+		]);
+
+		usePreviousValueEffect(onChangeAnimate, [animate]);
 
 		React.useEffect(() => {
 			if (!componentRef.current || !initial || (initial === true && !animate)) {
