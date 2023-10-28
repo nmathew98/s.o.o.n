@@ -102,7 +102,9 @@ export const PolymorphicMotion = React.forwardRef(
 					onMouseOver?.(event);
 					onHoverStart?.(event);
 
-					if (!componentRef.current || !hover) return;
+					if (!componentRef.current || !hover) {
+						return;
+					}
 
 					const { transition: hoverAnimationsTransitions, ...rest } = hover;
 
@@ -130,7 +132,9 @@ export const PolymorphicMotion = React.forwardRef(
 			async event => {
 				onClick?.(event);
 
-				if (!componentRef.current || !press) return;
+				if (!componentRef.current || !press) {
+					return;
+				}
 
 				const { transition: pressAnimationsTransitions, ...rest } = press;
 
@@ -164,7 +168,9 @@ export const PolymorphicMotion = React.forwardRef(
 
 		const createHandles = (): PolymorphicMotionHandles => ({
 			animateExit: async () => {
-				if (!componentRef.current || !exit) return;
+				if (!componentRef.current || !exit) {
+					return;
+				}
 
 				const { transition: exitTransition, ...rest } = exit;
 
@@ -232,7 +238,9 @@ export const PolymorphicMotion = React.forwardRef(
 		);
 
 		React.useEffect(() => {
-			if (!componentRef.current || !initial) return;
+			if (!componentRef.current || !initial) {
+				return;
+			}
 
 			const { transition: initialTransition, ...rest } = initial;
 
