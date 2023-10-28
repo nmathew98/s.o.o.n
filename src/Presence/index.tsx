@@ -186,7 +186,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 				const withExitAnimation = React.cloneElement(child, {
 					...props,
-					initial: initial === false ? undefined : childPropsInitial,
+					initial: initial === false ? initial : childPropsInitial,
 					ref: animateExit(
 						child,
 						idx,
