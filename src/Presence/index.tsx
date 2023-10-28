@@ -20,11 +20,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	const pendingChildren = React.useRef<MotionChildWithKey[]>([]);
 
 	React.useEffect(() => {
-		if (isInitialRender.current) {
-			isInitialRender.current = false;
-
-			return;
-		}
+		if (isInitialRender.current) return void (isInitialRender.current = false);
 
 		const setNthChild = (
 			initialChild: MotionChildWithKey,
@@ -32,9 +28,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		) =>
 			setChildrenToRender(children =>
 				children.map(child => {
-					if (child.key === initialChild.key) {
-						return currentChild;
-					}
+					if (child.key === initialChild.key) return currentChild;
 
 					return child;
 				}),
@@ -47,6 +41,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				_: MotionChildWithKey,
 				idx: number,
 				exitingChildren: MotionChildWithKey[],
+				exitingChildrenLookup: Map<string, MotionChildWithKey>,
 			) =>
 			(instance: PolymorphicMotionHandles) =>
 				instance.animateExit().then(() => {
@@ -65,26 +60,29 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 						idx === exitingChildren.length - 1
 					)
 						setChildrenToRender(children => [
-							...children,
+							...children.filter(child => exitingChildrenLookup.has(child.key)),
 							...pendingChildren.current.splice(0),
 						]);
 				});
 
 		// If `!exitBeforeEnter` then we add in pending children as each rendered element
 		// is animated out
-		const animateExitAndEnter =
+		const animateExitWhileEnter =
 			(
 				child: MotionChildWithKey,
 				idx: number,
 				exitingChildren: MotionChildWithKey[],
+				exitingChildrenLookup: Map<string, MotionChildWithKey>,
 			) =>
-			(instance: PolymorphicMotionHandles) =>
+			(instance: PolymorphicMotionHandles) => {
 				instance.animateExit().then(() => {
-					if (pendingChildren.current.length > 0)
-						setNthChild(
-							child,
-							pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
+					if (idx === exitingChildren.length - 1) {
+						setChildrenToRender(childrenToRender =>
+							childrenToRender.filter(child =>
+								exitingChildrenLookup.has(child.key),
+							),
 						);
+					}
 
 					if (
 						pendingChildren.current.length &&
@@ -96,12 +94,19 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 						]);
 				});
 
+				if (pendingChildren.current.length > 0)
+					setNthChild(
+						child,
+						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
+					);
+			};
+
 		// In both cases, an exiting element is paired with a pending element
 		// and if there are more pending children than there are exiting
 		// then they are appended to `childrenToRender`
 		const animateExit = exitBeforeEnter
 			? animateExitBeforeEnter
-			: animateExitAndEnter;
+			: animateExitWhileEnter;
 
 		setChildrenToRender(childrenToRender => {
 			const renderedChildrenLookup = createLookup(childrenToRender);
@@ -119,7 +124,12 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 					(child, idx, exitingChildren) =>
 						React.cloneElement(child, {
 							...child.props,
-							ref: animateExit(child, idx, exitingChildren),
+							ref: animateExit(
+								child,
+								idx,
+								exitingChildren,
+								exitingChildrenDiffLookup,
+							),
 						}) as MotionChildWithKey,
 				);
 
