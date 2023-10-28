@@ -3,7 +3,11 @@ import {
 	type AnimationOptionsWithOverrides,
 	type CSSStyleDeclarationWithTransform,
 	type ValueKeyframe,
+	type InViewOptions,
+	type ScrollOptions,
 	animate as motionAnimate,
+	inView as motionInView,
+	scroll as motionScroll,
 } from "motion";
 import React from "react";
 import { usePreviousValueEffect } from "../hooks/use-previous-value-effect";
@@ -29,12 +33,14 @@ export type PolymorphicMotionProps<
 > = {
 	as: T;
 	ref?: React.Ref<PolymorphicMotionHandles>;
-	initial?: KeyframesDefinition;
+	initial?: boolean | KeyframesDefinition;
 	animate?: KeyframesDefinition;
 	hover?: KeyframesDefinition;
 	press?: KeyframesDefinition;
 	exit?: KeyframesDefinition;
 	transition?: AnimationOptionsWithOverrides;
+	inView?: boolean | InViewOptions;
+	scroll?: boolean | ScrollOptions;
 	onMotionStart?: (controls: AnimationControls) => void;
 	onMotionEnd?: (controls: AnimationControls) => void;
 	onHoverStart?: React.MouseEventHandler<T>;
@@ -61,6 +67,8 @@ export const PolymorphicMotion = React.forwardRef(
 			press,
 			exit,
 			transition,
+			inView,
+			scroll,
 			onMouseUp,
 			onMouseDown,
 			onMouseLeave,
@@ -220,7 +228,7 @@ export const PolymorphicMotion = React.forwardRef(
 						},
 					);
 
-					const animate = async () => {
+					const runAnimation = async () => {
 						await pendingAnimation.current;
 						const controls = motionAnimate(
 							componentRef.current as HTMLElement,
@@ -231,32 +239,58 @@ export const PolymorphicMotion = React.forwardRef(
 						setPendingAnimation(controls);
 					};
 
-					animate();
+					runAnimation();
 				}
 			},
 			[animate, setPendingAnimation],
 		);
 
 		React.useEffect(() => {
-			if (!componentRef.current || !initial) {
+			if (!componentRef.current || !initial || (initial === true && !animate)) {
 				return;
 			}
 
-			const { transition: initialTransition, ...rest } = initial;
+			const { transition: initialTransition, ...rest } =
+				initial === true ? (animate as KeyframesDefinition) : initial;
 
-			const animate = async () => {
+			const runAnimation = async () => {
 				await pendingAnimation.current;
-				const controls = motionAnimate(
-					componentRef.current as HTMLElement,
-					rest,
-					initialTransition ?? transition,
-				);
 
-				setPendingAnimation(controls);
+				const animate = () => {
+					const controls = motionAnimate(
+						componentRef.current as HTMLElement,
+						rest,
+						initialTransition ?? transition,
+					);
+
+					setPendingAnimation(controls);
+
+					return controls;
+				};
+
+				if (scroll) {
+					const scrollOptions =
+						typeof scroll === "boolean" ? undefined : scroll;
+
+					return void motionScroll(animate(), scrollOptions);
+				}
+
+				if (inView) {
+					const inViewOptions =
+						typeof inView === "boolean" ? undefined : inView;
+
+					return void motionInView(
+						componentRef.current as HTMLElement,
+						() => animate().stop,
+						inViewOptions,
+					);
+				}
+
+				return void animate();
 			};
 
-			animate();
-		}, [initial, transition, setPendingAnimation]);
+			runAnimation();
+		}, [initial, animate, transition, scroll, inView, setPendingAnimation]);
 
 		const Component = as as React.ElementType;
 
