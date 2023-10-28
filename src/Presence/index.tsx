@@ -26,8 +26,8 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			return void (isInitialRender.current = false);
 		}
 
-		// If `exitBeforeEnter` then we wait until all children
-		// have been animated out and only then do we add in the pending children
+		// If `exitBeforeEnter` then we wait until the child
+		// has been animated out and only then do we add in the pending child
 		const animateExitBeforeEnter =
 			(
 				_: MotionChildWithKey,
@@ -77,8 +77,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				}),
 			);
 
-		// If `!exitBeforeEnter` then we add in pending children as each rendered element
-		// is animated out
+		// If `!exitBeforeEnter` then we add in pending children as child is animated out
 		const animateExitWhileEnter =
 			(
 				child: MotionChildWithKey,
