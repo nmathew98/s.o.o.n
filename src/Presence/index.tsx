@@ -112,13 +112,14 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 						ref: animateExit(child, idx, arr),
 					}) as MotionChildWithKey,
 			);
-		const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
 
-		if (!exitingChildrenDiffLookup.size && !pendingChildren.current.length)
+		if (!exitingChildrenDiff.length && !pendingChildren.current.length)
 			return childrenToRender;
 
-		if (!exitingChildrenDiffLookup.size && pendingChildren.current.length)
+		if (!exitingChildrenDiff.length && pendingChildren.current.length)
 			return [...childrenToRender, ...pendingChildren.current];
+
+		const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
 
 		return childrenToRender.map(child => {
 			if (!exitingChildrenDiffLookup.has(child.key)) return child;
