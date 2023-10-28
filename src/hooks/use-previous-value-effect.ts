@@ -9,9 +9,10 @@ export const usePreviousValueEffect = (
 	React.useEffect(() => {
 		const cleanup = f(previousDeps.current, deps);
 
+		previousDeps.current = deps;
+
 		return cleanup;
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, deps);
+	}, [f, deps]);
 };
 
 export type PreviousValueEffect = (
