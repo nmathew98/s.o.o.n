@@ -6,10 +6,12 @@ import {
 } from "../Motion";
 
 export interface PresenceProps {
+	initial?: boolean;
 	exitBeforeEnter?: boolean;
 }
 
 export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
+	initial,
 	children,
 	exitBeforeEnter,
 }) => {
@@ -181,8 +183,11 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 			const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
 			exitingChildrenDiff.forEach((child, idx, exitingChildren) => {
+				const { initial: childPropsInitial, ...props } = child.props;
+
 				const withExitAnimation = React.cloneElement(child, {
-					...child.props,
+					...props,
+					initial: initial === false ? undefined : childPropsInitial,
 					ref: animateExit(
 						child,
 						idx,
@@ -200,7 +205,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 					: child,
 			);
 		});
-	}, [children, setChildrenToRender, exitBeforeEnter]);
+	}, [children, setChildrenToRender, exitBeforeEnter, initial]);
 
 	return childrenToRender;
 };
