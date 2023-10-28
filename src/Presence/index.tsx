@@ -36,13 +36,14 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			(instance: PolymorphicMotionHandles) =>
 				instance.animateExit().then(() => {
 					if (idx === exitingChildrenLookup.size - 1) {
+						const nextPendingChild = pendingChildren.current.splice(0, 1).pop();
+
+						if (!nextPendingChild) {
+							return;
+						}
+
 						exitingChildren.forEach(child => {
-							setNthChild(
-								child,
-								pendingChildren.current
-									.splice(0, 1)
-									.pop() as MotionChildWithKey,
-							);
+							setNthChild(child, nextPendingChild);
 						});
 					}
 
@@ -110,10 +111,13 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				});
 
 				if (pendingChildren.current.length > 0) {
-					setNthPlusOneChild(
-						child,
-						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
-					);
+					const nextPendingChild = pendingChildren.current.splice(0, 1).pop();
+
+					if (!nextPendingChild) {
+						return;
+					}
+
+					setNthPlusOneChild(child, nextPendingChild);
 				}
 			};
 
