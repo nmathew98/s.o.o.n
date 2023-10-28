@@ -38,14 +38,17 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			(instance: PolymorphicMotionHandles) =>
 				instance.animateExit().then(() => {
 					if (idx === exitingChildrenLookup.size - 1) {
-						const nextPendingChild = pendingChildren.current.splice(0, 1).pop();
-
-						if (!nextPendingChild) {
-							return;
-						}
-
 						exitingChildren.forEach(child => {
-							setNthChild(child, nextPendingChild);
+							if (!pendingChildren.current.length) {
+								return;
+							}
+
+							setNthChild(
+								child,
+								pendingChildren.current
+									.splice(0, 1)
+									.pop() as MotionChildWithKey,
+							);
 						});
 					}
 
@@ -96,7 +99,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 					}
 
 					if (
-						pendingChildren.current.length > 0 &&
+						pendingChildren.current.length &&
 						idx === exitingChildrenLookup.size - 1
 					) {
 						const finalNumberOfPendingChildren = pendingChildren.current.length;
@@ -112,14 +115,11 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 					}
 				});
 
-				if (pendingChildren.current.length > 0) {
-					const nextPendingChild = pendingChildren.current.splice(0, 1).pop();
-
-					if (!nextPendingChild) {
-						return;
-					}
-
-					setNthPlusOneChild(child, nextPendingChild);
+				if (pendingChildren.current.length) {
+					setNthPlusOneChild(
+						child,
+						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
+					);
 				}
 			};
 
