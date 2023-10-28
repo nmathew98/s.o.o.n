@@ -96,16 +96,17 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			? animateExitBeforeEnter
 			: animateExitAndEnter;
 
-		setChildrenToRender(children => {
-			const renderedChildrenLookup = createLookup(children);
-			const currentChildren = filterMotionElementsWithKeys(children);
+		setChildrenToRender(childrenToRender => {
+			const renderedChildrenLookup = createLookup(childrenToRender);
 
+			const currentChildren = filterMotionElementsWithKeys(children);
 			const currentChildrenLookup = createLookup(currentChildren);
+
 			pendingChildren.current = currentChildren.filter(
 				child => !renderedChildrenLookup.has(child.key),
 			);
 
-			const exitingChildrenDiff = children
+			const exitingChildrenDiff = childrenToRender
 				.filter(child => !currentChildrenLookup.has(child.key))
 				.map(
 					(child, idx, arr) =>
@@ -116,13 +117,13 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				);
 			const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
 
-			return children.map(child => {
+			return childrenToRender.map(child => {
 				if (!exitingChildrenDiffLookup.has(child.key)) return child;
 
 				return exitingChildrenDiffLookup.get(child.key) as MotionChildWithKey;
 			});
 		});
-	}, [setChildrenToRender, exitBeforeEnter]);
+	}, [children, setChildrenToRender, exitBeforeEnter]);
 
 	return childrenToRender;
 };
