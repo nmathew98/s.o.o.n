@@ -24,7 +24,9 @@ export const Motion: Motion = new Proxy(Object.create(null), {
 			} as PolymorphicMotionProps<T>),
 });
 
-type PolymorphicMotionProps<T extends keyof React.JSX.IntrinsicElements> = {
+export type PolymorphicMotionProps<
+	T extends keyof React.JSX.IntrinsicElements,
+> = {
 	as: T;
 	ref?: React.Ref<PolymorphicMotionHandles>;
 	initial?: KeyframesDefinition;
@@ -49,7 +51,7 @@ export interface PolymorphicMotionHandles {
 	animateExit: () => Promise<void>;
 }
 
-const PolymorphicMotion = React.forwardRef(
+export const PolymorphicMotion = React.forwardRef(
 	<T extends keyof React.JSX.IntrinsicElements>(
 		{
 			as,
