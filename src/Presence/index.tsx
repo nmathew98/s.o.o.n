@@ -58,12 +58,12 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 					});
 
 				if (
-					pendingChildren.current.length > exitingChildren.length &&
+					pendingChildren.current.length > 0 &&
 					idx === exitingChildren.length - 1
 				)
 					setChildrenToRender(children => [
 						...children,
-						...pendingChildren.current.splice(exitingChildren.length - 1),
+						...pendingChildren.current.splice(0),
 					]);
 			});
 
