@@ -19,134 +19,133 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	const isInitialRender = React.useRef(true);
 	const pendingChildren = React.useRef<MotionChildWithKey[]>([]);
 
-	React.useLayoutEffect(() => {
-		isInitialRender.current = false;
-	});
+	React.useEffect(() => {
+		if (isInitialRender.current) {
+			isInitialRender.current = false;
 
-	if (isInitialRender.current) return childrenToRender;
+			return;
+		}
 
-	const setNthChild = (
-		initialChild: MotionChildWithKey,
-		currentChild: MotionChildWithKey,
-	) =>
-		setChildrenToRender(children =>
-			children.map(child => {
-				if (child.key === initialChild.key) {
-					return currentChild;
-				}
-
-				return child;
-			}),
-		);
-
-	// If `exitBeforeEnter` then we wait until all children
-	// have been animated out and only then do we add in the pending children
-	const animateExitBeforeEnter =
-		(
-			_: MotionChildWithKey,
-			idx: number,
-			exitingChildren: MotionChildWithKey[],
+		const setNthChild = (
+			initialChild: MotionChildWithKey,
+			currentChild: MotionChildWithKey,
 		) =>
-		(instance: PolymorphicMotionHandles) =>
-			instance.animateExit().then(() => {
-				if (idx === exitingChildren.length - 1)
-					exitingChildren.forEach(child => {
+			setChildrenToRender(children =>
+				children.map(child => {
+					if (child.key === initialChild.key) {
+						return currentChild;
+					}
+
+					return child;
+				}),
+			);
+
+		// If `exitBeforeEnter` then we wait until all children
+		// have been animated out and only then do we add in the pending children
+		const animateExitBeforeEnter =
+			(
+				_: MotionChildWithKey,
+				idx: number,
+				exitingChildren: MotionChildWithKey[],
+			) =>
+			(instance: PolymorphicMotionHandles) =>
+				instance.animateExit().then(() => {
+					if (idx === exitingChildren.length - 1)
+						exitingChildren.forEach(child => {
+							setNthChild(
+								child,
+								pendingChildren.current
+									.splice(0, 1)
+									.pop() as MotionChildWithKey,
+							);
+						});
+
+					if (
+						pendingChildren.current.length &&
+						idx === exitingChildren.length - 1
+					)
+						setChildrenToRender(children => [
+							...children,
+							...pendingChildren.current.splice(0),
+						]);
+				});
+
+		// If `!exitBeforeEnter` then we add in pending children as each rendered element
+		// is animated out
+		const animateExitAndEnter =
+			(
+				child: MotionChildWithKey,
+				idx: number,
+				exitingChildren: MotionChildWithKey[],
+			) =>
+			(instance: PolymorphicMotionHandles) =>
+				instance.animateExit().then(() => {
+					if (pendingChildren.current.length > 0)
 						setNthChild(
 							child,
 							pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
 						);
-					});
 
-				if (
-					pendingChildren.current.length &&
-					idx === exitingChildren.length - 1
-				)
-					setChildrenToRender(children => [
-						...children,
-						...pendingChildren.current.splice(0),
-					]);
-			});
+					if (
+						pendingChildren.current.length &&
+						idx === exitingChildren.length - 1
+					)
+						setChildrenToRender(children => [
+							...children,
+							...pendingChildren.current.splice(0),
+						]);
+				});
 
-	// If `!exitBeforeEnter` then we add in pending children as each rendered element
-	// is animated out
-	const animateExitAndEnter =
-		(
-			child: MotionChildWithKey,
-			idx: number,
-			exitingChildren: MotionChildWithKey[],
-		) =>
-		(instance: PolymorphicMotionHandles) =>
-			instance.animateExit().then(() => {
-				if (pendingChildren.current.length > 0)
-					setNthChild(
-						child,
-						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
-					);
+		// In both cases, an exiting element is paired with a pending element
+		// and if there are more pending children than there are exiting
+		// then they are appended to `childrenToRender`
+		const animateExit = exitBeforeEnter
+			? animateExitBeforeEnter
+			: animateExitAndEnter;
 
-				if (
-					pendingChildren.current.length &&
-					idx === exitingChildren.length - 1
-				)
-					setChildrenToRender(children => [
-						...children,
-						...pendingChildren.current.splice(0),
-					]);
-			});
+		setChildrenToRender(childrenToRender => {
+			const renderedChildrenLookup = createLookup(childrenToRender);
 
-	// In both cases, an exiting element is paired with a pending element
-	// and if there are more pending children than there are exiting
-	// then they are appended to `childrenToRender`
-	const animateExit = exitBeforeEnter
-		? animateExitBeforeEnter
-		: animateExitAndEnter;
+			const currentChildren = filterMotionElementsWithKeys(children);
+			const currentChildrenLookup = createLookup(currentChildren);
 
-	setChildrenToRender(childrenToRender => {
-		// This state update should only run when there are no `pendingChildren`
-		// which means that all pending updates from exiting elements
-		// have been applied
-		if (pendingChildren.current.length) return childrenToRender;
-
-		const renderedChildrenLookup = createLookup(childrenToRender);
-
-		const currentChildren = filterMotionElementsWithKeys(children);
-		const currentChildrenLookup = createLookup(currentChildren);
-
-		pendingChildren.current = currentChildren.filter(
-			child => !renderedChildrenLookup.has(child.key),
-		);
-
-		const exitingChildrenDiff = childrenToRender
-			.filter(child => !currentChildrenLookup.has(child.key))
-			.map(
-				(child, idx, exitingChildren) =>
-					React.cloneElement(child, {
-						...child.props,
-						ref: animateExit(child, idx, exitingChildren),
-					}) as MotionChildWithKey,
+			pendingChildren.current = currentChildren.filter(
+				child => !renderedChildrenLookup.has(child.key),
 			);
 
-		if (!exitingChildrenDiff.length && !pendingChildren.current.length)
-			return childrenToRender;
+			const exitingChildrenDiff = childrenToRender
+				.filter(child => !currentChildrenLookup.has(child.key))
+				.map(
+					(child, idx, exitingChildren) =>
+						React.cloneElement(child, {
+							...child.props,
+							ref: animateExit(child, idx, exitingChildren),
+						}) as MotionChildWithKey,
+				);
 
-		if (!exitingChildrenDiff.length && pendingChildren.current.length) {
-			const updatedChildrenToRender = [
-				...childrenToRender,
-				...pendingChildren.current,
-			];
+			if (!exitingChildrenDiff.length && !pendingChildren.current.length)
+				return childrenToRender;
 
-			pendingChildren.current = [];
+			if (!exitingChildrenDiff.length && pendingChildren.current.length) {
+				const updatedChildrenToRender = [
+					...childrenToRender,
+					...pendingChildren.current,
+				];
 
-			return updatedChildrenToRender;
-		}
+				pendingChildren.current = [];
 
-		const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
+				return updatedChildrenToRender;
+			}
 
-		return childrenToRender.map(child =>
-			exitingChildrenDiffLookup.has(child.key)
-				? (exitingChildrenDiffLookup.get(child.key) as MotionChildWithKey)
-				: child,
-		);
-	});
+			const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
+
+			return childrenToRender.map(child =>
+				exitingChildrenDiffLookup.has(child.key)
+					? (exitingChildrenDiffLookup.get(child.key) as MotionChildWithKey)
+					: child,
+			);
+		});
+	}, [children, setChildrenToRender, exitBeforeEnter]);
 
 	return childrenToRender;
 };
