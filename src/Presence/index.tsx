@@ -41,7 +41,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				_: MotionChildWithKey,
 				idx: number,
 				exitingChildren: MotionChildWithKey[],
-				exitingChildrenKeys: Set<string>,
+				exitingChildrenKeys: Map<string, MotionChildWithKey>,
 			) =>
 			(instance: PolymorphicMotionHandles) =>
 				instance.animateExit().then(() => {
@@ -72,7 +72,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				child: MotionChildWithKey,
 				idx: number,
 				_: MotionChildWithKey[],
-				exitingChildrenKeys: Set<string>,
+				exitingChildrenKeys: Map<string, MotionChildWithKey>,
 			) =>
 			(instance: PolymorphicMotionHandles) => {
 				const initialNumberOfPendingChildren = pendingChildren.current.length;
@@ -145,18 +145,20 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				return updatedChildrenToRender;
 			}
 
-			const exitingChildrenKeys = new Set(
-				exitingChildrenDiff.map(child => child.key),
-			);
-			const exitingChildren = exitingChildrenDiff.map(
-				(child, idx, exitingChildren) =>
-					React.cloneElement(child, {
-						...child.props,
-						ref: animateExit(child, idx, exitingChildren, exitingChildrenKeys),
-					}) as MotionChildWithKey,
-			);
+			const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
+			exitingChildrenDiff.forEach((child, idx, exitingChildren) => {
+				const withExitAnimation = React.cloneElement(child, {
+					...child.props,
+					ref: animateExit(
+						child,
+						idx,
+						exitingChildren,
+						exitingChildrenDiffLookup,
+					),
+				}) as MotionChildWithKey;
 
-			const exitingChildrenDiffLookup = createLookup(exitingChildren);
+				exitingChildrenDiffLookup.set(child.key, withExitAnimation);
+			});
 
 			return childrenToRender.map(child =>
 				exitingChildrenDiffLookup.has(child.key)
