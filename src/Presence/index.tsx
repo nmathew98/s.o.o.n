@@ -57,7 +57,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 					if (
 						pendingChildren.current.length &&
-						idx === exitingChildren.length - 1
+						idx === exitingChildrenLookup.size - 1
 					)
 						setChildrenToRender(children => [
 							...children.filter(child => exitingChildrenLookup.has(child.key)),
@@ -75,6 +75,8 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 				exitingChildrenLookup: Map<string, MotionChildWithKey>,
 			) =>
 			(instance: PolymorphicMotionHandles) => {
+				const initialNumberOfPendingChildren = pendingChildren.current.length;
+
 				instance.animateExit().then(() => {
 					if (idx === exitingChildren.length - 1) {
 						setChildrenToRender(childrenToRender =>
@@ -85,13 +87,20 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 					}
 
 					if (
-						pendingChildren.current.length &&
-						idx === exitingChildren.length - 1
-					)
+						pendingChildren.current.length > 0 &&
+						idx === exitingChildrenLookup.size - 1
+					) {
+						const finalNumberOfPendingChildren = pendingChildren.current.length;
+						const hasNextPendingChildBeenAdded =
+							finalNumberOfPendingChildren < initialNumberOfPendingChildren;
+
 						setChildrenToRender(children => [
 							...children,
-							...pendingChildren.current.splice(0),
+							...pendingChildren.current.splice(
+								hasNextPendingChildBeenAdded ? 0 : 1,
+							),
 						]);
+					}
 				});
 
 				if (pendingChildren.current.length > 0)
