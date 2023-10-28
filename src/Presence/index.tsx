@@ -23,107 +23,109 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		isInitialRender.current = false;
 	});
 
-	React.useEffect(() => {
-		if (isInitialRender.current) return;
+	if (isInitialRender.current) return childrenToRender;
 
-		const setNthChild = (
-			initialChild: MotionChildWithKey,
-			currentChild: MotionChildWithKey,
-		) =>
-			setChildrenToRender(children =>
-				children.map(child => {
-					if (child.key === initialChild.key) {
-						return currentChild;
-					}
+	const setNthChild = (
+		initialChild: MotionChildWithKey,
+		currentChild: MotionChildWithKey,
+	) =>
+		setChildrenToRender(children =>
+			children.map(child => {
+				if (child.key === initialChild.key) {
+					return currentChild;
+				}
 
-					return child;
-				}),
-			);
+				return child;
+			}),
+		);
 
-		// If `exitBeforeEnter` then we wait until all children
-		// have been animated out and only then do we add in the pending children
-		const animateExitBeforeEnter =
-			(_: MotionChildWithKey, idx: number, arr: MotionChildWithKey[]) =>
-			(instance: PolymorphicMotionHandles) =>
-				instance.animateExit().then(() => {
-					if (idx === arr.length - 1) {
-						arr.forEach(child => {
-							setNthChild(
-								child,
-								pendingChildren.current
-									.splice(0, 1)
-									.pop() as MotionChildWithKey,
-							);
-						});
-					}
-
-					if (
-						idx === arr.length - 1 &&
-						pendingChildren.current.length > arr.length
-					) {
-						setChildrenToRender(children => [
-							...children,
-							...pendingChildren.current.slice(arr.length),
-						]);
-					}
-				});
-
-		// If `!exitBeforeEnter` then we add in pending children as each rendered element
-		// is animated out
-		const animateExitAndEnter =
-			(child: MotionChildWithKey, idx: number, arr: MotionChildWithKey[]) =>
-			(instance: PolymorphicMotionHandles) =>
-				instance.animateExit().then(() => {
-					if (pendingChildren.current.length > 0) {
+	// If `exitBeforeEnter` then we wait until all children
+	// have been animated out and only then do we add in the pending children
+	const animateExitBeforeEnter =
+		(_: MotionChildWithKey, idx: number, arr: MotionChildWithKey[]) =>
+		(instance: PolymorphicMotionHandles) =>
+			instance.animateExit().then(() => {
+				if (idx === arr.length - 1) {
+					arr.forEach(child => {
 						setNthChild(
 							child,
 							pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
 						);
-					}
+					});
+				}
 
-					if (idx === arr.length - 1 && pendingChildren.current.length > 0) {
-						setChildrenToRender(children => [
-							...children,
-							...pendingChildren.current,
-						]);
-					}
-				});
-
-		// In both cases, an exiting element is paired with a pending element
-		// and if there are more pending children than there are exiting
-		// then they are appended to `childrenToRender`
-		const animateExit = exitBeforeEnter
-			? animateExitBeforeEnter
-			: animateExitAndEnter;
-
-		setChildrenToRender(childrenToRender => {
-			const renderedChildrenLookup = createLookup(childrenToRender);
-
-			const currentChildren = filterMotionElementsWithKeys(children);
-			const currentChildrenLookup = createLookup(currentChildren);
-
-			pendingChildren.current = currentChildren.filter(
-				child => !renderedChildrenLookup.has(child.key),
-			);
-
-			const exitingChildrenDiff = childrenToRender
-				.filter(child => !currentChildrenLookup.has(child.key))
-				.map(
-					(child, idx, arr) =>
-						React.cloneElement(child, {
-							...child.props,
-							ref: animateExit(child, idx, arr),
-						}) as MotionChildWithKey,
-				);
-			const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
-
-			return childrenToRender.map(child => {
-				if (!exitingChildrenDiffLookup.has(child.key)) return child;
-
-				return exitingChildrenDiffLookup.get(child.key) as MotionChildWithKey;
+				if (
+					idx === arr.length - 1 &&
+					pendingChildren.current.length > arr.length
+				) {
+					setChildrenToRender(children => [
+						...children,
+						...pendingChildren.current.slice(arr.length),
+					]);
+				}
 			});
+
+	// If `!exitBeforeEnter` then we add in pending children as each rendered element
+	// is animated out
+	const animateExitAndEnter =
+		(child: MotionChildWithKey, idx: number, arr: MotionChildWithKey[]) =>
+		(instance: PolymorphicMotionHandles) =>
+			instance.animateExit().then(() => {
+				if (pendingChildren.current.length > 0) {
+					setNthChild(
+						child,
+						pendingChildren.current.splice(0, 1).pop() as MotionChildWithKey,
+					);
+				}
+
+				if (idx === arr.length - 1 && pendingChildren.current.length > 0) {
+					setChildrenToRender(children => [
+						...children,
+						...pendingChildren.current,
+					]);
+				}
+			});
+
+	// In both cases, an exiting element is paired with a pending element
+	// and if there are more pending children than there are exiting
+	// then they are appended to `childrenToRender`
+	const animateExit = exitBeforeEnter
+		? animateExitBeforeEnter
+		: animateExitAndEnter;
+
+	setChildrenToRender(childrenToRender => {
+		const renderedChildrenLookup = createLookup(childrenToRender);
+
+		const currentChildren = filterMotionElementsWithKeys(children);
+		const currentChildrenLookup = createLookup(currentChildren);
+
+		pendingChildren.current = currentChildren.filter(
+			child => !renderedChildrenLookup.has(child.key),
+		);
+
+		const exitingChildrenDiff = childrenToRender
+			.filter(child => !currentChildrenLookup.has(child.key))
+			.map(
+				(child, idx, arr) =>
+					React.cloneElement(child, {
+						...child.props,
+						ref: animateExit(child, idx, arr),
+					}) as MotionChildWithKey,
+			);
+		const exitingChildrenDiffLookup = createLookup(exitingChildrenDiff);
+
+		if (!exitingChildrenDiffLookup.size && !pendingChildren.current.length)
+			return childrenToRender;
+
+		if (!exitingChildrenDiffLookup.size && pendingChildren.current.length)
+			return [...childrenToRender, ...pendingChildren.current];
+
+		return childrenToRender.map(child => {
+			if (!exitingChildrenDiffLookup.has(child.key)) return child;
+
+			return exitingChildrenDiffLookup.get(child.key) as MotionChildWithKey;
 		});
-	}, [children, setChildrenToRender, exitBeforeEnter]);
+	});
 
 	return childrenToRender;
 };
