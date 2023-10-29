@@ -84,7 +84,7 @@ export const PolymorphicMotion = React.forwardRef(
 	) => {
 		const pendingAnimation = React.useRef<null | Promise<unknown>>(null);
 		const componentRef = React.useRef<null | HTMLElement>(null);
-		const renderCount = React.useRef(0);
+		const isInitialRender = React.useRef(true);
 
 		const setPendingAnimation = React.useCallback(
 			(controls: AnimationControls) => {
@@ -194,54 +194,6 @@ export const PolymorphicMotion = React.forwardRef(
 			},
 		});
 
-		const onChangeAnimate = React.useCallback(
-			(from?: React.DependencyList, to?: React.DependencyList) => {
-				if (isInitialRender(renderCount.current)) {
-					return;
-				}
-
-				if (
-					componentRef.current &&
-					from?.every(Boolean) &&
-					to?.every(Boolean)
-				) {
-					const [animateFrom] = from as [KeyframesDefinition];
-					const [animateTo] = to as [KeyframesDefinition];
-
-					const { transition: animateFromTransition, ...rest } = animateFrom;
-					const animateFromEntries = Object.entries(rest);
-					const newEntriesFromFinal = Object.entries(animateTo).filter(
-						([k]) =>
-							k !== "transition" &&
-							animateFromEntries.every(([fromK]) => fromK !== k),
-					);
-
-					const merged = [...animateFromEntries, ...newEntriesFromFinal].map(
-						([key, initialValue]) => {
-							const finalValue =
-								animateTo[key as keyof CSSStyleDeclarationWithTransform];
-
-							return [key, [initialValue, finalValue]];
-						},
-					);
-
-					const runAnimation = async () => {
-						await pendingAnimation.current;
-						const controls = motionAnimate(
-							componentRef.current as HTMLElement,
-							Object.fromEntries(merged),
-							animateFromTransition ?? transition,
-						);
-
-						setPendingAnimation(controls);
-					};
-
-					runAnimation();
-				}
-			},
-			[setPendingAnimation, transition],
-		);
-
 		React.useImperativeHandle(ref, createHandles, [
 			exit,
 			transition,
@@ -249,14 +201,8 @@ export const PolymorphicMotion = React.forwardRef(
 		]);
 
 		React.useLayoutEffect(() => {
-			renderCount.current = renderCount.current + 1;
-		}, []);
-
-		usePreviousValueEffect(onChangeAnimate, [animate]);
-
-		React.useEffect(() => {
 			if (
-				!isInitialRender(renderCount.current) ||
+				!isInitialRender.current ||
 				!componentRef.current ||
 				!initial ||
 				(initial === true && !animate)
@@ -306,6 +252,56 @@ export const PolymorphicMotion = React.forwardRef(
 			runAnimation();
 		}, [initial, animate, transition, scroll, inView, setPendingAnimation]);
 
+		const onChangeAnimate = React.useCallback(
+			(from?: React.DependencyList, to?: React.DependencyList) => {
+				if (isInitialRender.current) {
+					return void (isInitialRender.current = false);
+				}
+
+				if (
+					componentRef.current &&
+					from?.every(Boolean) &&
+					to?.every(Boolean)
+				) {
+					const [animateFrom] = from as [KeyframesDefinition];
+					const [animateTo] = to as [KeyframesDefinition];
+
+					const { transition: animateFromTransition, ...rest } = animateFrom;
+					const animateFromEntries = Object.entries(rest);
+					const newEntriesFromFinal = Object.entries(animateTo).filter(
+						([k]) =>
+							k !== "transition" &&
+							animateFromEntries.every(([fromK]) => fromK !== k),
+					);
+
+					const merged = [...animateFromEntries, ...newEntriesFromFinal].map(
+						([key, initialValue]) => {
+							const finalValue =
+								animateTo[key as keyof CSSStyleDeclarationWithTransform];
+
+							return [key, [initialValue, finalValue]];
+						},
+					);
+
+					const runAnimation = async () => {
+						await pendingAnimation.current;
+						const controls = motionAnimate(
+							componentRef.current as HTMLElement,
+							Object.fromEntries(merged),
+							animateFromTransition ?? transition,
+						);
+
+						setPendingAnimation(controls);
+					};
+
+					runAnimation();
+				}
+			},
+			[setPendingAnimation, transition],
+		);
+
+		usePreviousValueEffect(onChangeAnimate, [animate]);
+
 		const Component = as as React.ElementType;
 
 		return (
@@ -321,5 +317,3 @@ export const PolymorphicMotion = React.forwardRef(
 		);
 	},
 );
-
-const isInitialRender = (count: number) => count <= 1;
