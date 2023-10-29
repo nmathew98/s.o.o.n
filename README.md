@@ -51,7 +51,7 @@ Exit animations are triggered on children when they are no longer rendered
 
 ```JSX
 <Presence>
-    {show && <Motion.div>{children}</Motion.div>}
+    {show && <Motion.div key="s.o.o.n">{children}</Motion.div>}
 </Presence>
 ```
 
@@ -60,7 +60,7 @@ Exit animations are triggered on children when they are no longer rendered
 - `initial`
   - Disable initial animations on all children
 - `exitBeforeEnter`
-  - If `true` waits until all exiting children to animate out before animating in new children
+  - If `true` waits until all exiting children animate out before animating in new children
   - Otherwise new children are animated in as exiting children animate out
 
 ## Contributions
