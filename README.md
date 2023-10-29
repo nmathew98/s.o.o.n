@@ -12,6 +12,10 @@ Renders an animatable HTML or SVG element
 
 Wrap a component in `Motion` to enable animations on them
 
+```typescript
+<Motion.div>{children}</Motion>
+```
+
 #### Props
 
 - `animate`
@@ -32,8 +36,10 @@ Wrap a component in `Motion` to enable animations on them
   - Default transitions for all animations to use
 - `inView`
   - If `true` uses default `inView` options from `motion`, otherwise specify options
+  - Only triggers for initial animations
 - `scroll`
   - If `true` uses default `scroll` options from `motion`, otherwise specify options
+  - Only triggers for initial animations
 
 ### Presence
 
@@ -41,12 +47,21 @@ Perform exit animations
 
 All direct children of `Presence` should be `Motion` and should specify a `key`, direct children of `Presence` which are not `Motion` are filtered out
 
+Exit animations are triggered on children when they are no longer rendered
+
+```typescript
+<Presence>
+    {show && <Motion.div>{children}</Motion.div>}
+</Presence>
+```
+
 #### Props
 
 - `initial`
   - Disable initial animations on all children
 - `exitBeforeEnter`
-  - If true waits until all exiting children to animate out before animating in new children, otherwise new children are animated in as exiting children animate out
+  - If `true` waits until all exiting children to animate out before animating in new children
+  - Otherwise new children are animated in as exiting children animate out
 
 ## Contributions
 
