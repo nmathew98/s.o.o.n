@@ -3,11 +3,18 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import { Motion } from "./Motion";
+import { Presence } from "./Presence";
 
 function App() {
 	const [count, setCount] = useState(0);
+	const [show, setShow] = useState(false);
 
 	const animateOptions = { opacity: count / 5 };
+
+	setInterval(() => {
+		console.log("Here!");
+		setShow(show => !show);
+	}, 1000);
 	return (
 		<>
 			<div>
@@ -20,16 +27,13 @@ function App() {
 			</div>
 			<h1>Vite + React</h1>
 			<div className="card">
-				<Motion.button
-					key="test"
-					animate={animateOptions}
-					initial={{ opacity: 0.1 }}
-					onClick={() => setCount(count => count + 1)}>
-					count is {count}
-				</Motion.button>
-				<Motion.div initial={{ opacity: 0.1 }}>
-					<TestButton />
-				</Motion.div>
+				<Presence>
+					{show && (
+						<Motion.div key="test" initial={{ opacity: 0.1 }}>
+							<TestButton />
+						</Motion.div>
+					)}
+				</Presence>
 				<p>
 					Edit <code>src/App.tsx</code> and save to test HMR
 				</p>

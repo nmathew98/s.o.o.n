@@ -16,7 +16,10 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	exitBeforeEnter,
 }) => {
 	const [childrenToRender, setChildrenToRender] = React.useState(
-		filterMotionElementsWithKeys(children),
+		applyProps(filterMotionElementsWithKeys(children), {
+			initial,
+			exitBeforeEnter,
+		}),
 	);
 	const isInitialRender = React.useRef(true);
 	const pendingChildren = React.useRef<MotionChildWithKey[]>([]);
@@ -166,7 +169,10 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			);
 
 			if (!exitingChildrenDiff.length && !pendingChildren.current.length) {
-				return childrenToRender;
+				return applyProps(filterMotionElementsWithKeys(children), {
+					initial,
+					exitBeforeEnter,
+				});
 			}
 
 			if (!exitingChildrenDiff.length && pendingChildren.current.length) {
@@ -216,21 +222,32 @@ const createLookup = (
 
 const filterMotionElementsWithKeys = (
 	children: React.ReactNode | React.ReactNode[],
-) =>
-	React.Children.toArray(children).filter(
-		and(isMotionElement, hasKey),
-	) as MotionChildWithKey[];
+) => {
+	const filtered: MotionChildWithKey[] = [];
 
-const and =
-	(...predicates: ((x: unknown) => boolean)[]) =>
-	(x: unknown) =>
-		predicates.every(predicate => predicate(x));
+	React.Children.forEach(children, child => {
+		if (!isMotionElement(child) || !hasKey(child)) {
+			return;
+		}
+
+		filtered.push(child as MotionChildWithKey);
+	});
+
+	return filtered;
+};
+
+const applyProps = (children: MotionChildWithKey[], props: PresenceProps) =>
+	children.map(child =>
+		React.cloneElement(child, {
+			...child.props,
+			initial: props.initial === false ? props.initial : child.props.initial,
+		}),
+	) as MotionChildWithKey[];
 
 const hasKey = (child: unknown) => Boolean((child as React.ReactElement)?.key);
 
 const isMotionElement = (child: unknown): child is MotionChild =>
-	React.isValidElement(child) &&
-	(child as MotionChild)?.type === PolymorphicMotion;
+	React.isValidElement(child);
 
 type MotionChild = React.ReactElement<
 	Omit<PolymorphicMotionProps<any>, "as">,
