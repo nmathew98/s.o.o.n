@@ -13,7 +13,7 @@ Renders an animatable HTML or SVG element
 Wrap a component in `Motion` to enable animations on them
 
 ```JSX
-<Motion.div>{children}</Motion>
+<Motion.div>{children}</Motion.div>
 ```
 
 #### Props
