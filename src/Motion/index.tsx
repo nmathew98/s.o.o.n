@@ -21,11 +21,9 @@ export type Motion = {
 export const Motion: Motion = new Proxy(Object.create(null), {
 	get:
 		<T extends keyof React.JSX.IntrinsicElements>(_: never, as: T) =>
-		(props: Omit<PolymorphicMotionProps<T>, "as">) =>
-			PolymorphicMotion({
-				as,
-				...props,
-			} as PolymorphicMotionProps<T>),
+		(props: Omit<PolymorphicMotionProps<T>, "as">) => (
+			<PolymorphicMotion as={as} {...props} />
+		),
 });
 
 export type PolymorphicMotionProps<
@@ -86,6 +84,7 @@ export const PolymorphicMotion = React.forwardRef(
 	) => {
 		const pendingAnimation = React.useRef<null | Promise<unknown>>(null);
 		const componentRef = React.useRef<null | HTMLElement>(null);
+		const renderCount = React.useRef(0);
 
 		const setPendingAnimation = React.useCallback(
 			(controls: AnimationControls) => {
@@ -197,6 +196,10 @@ export const PolymorphicMotion = React.forwardRef(
 
 		const onChangeAnimate = React.useCallback(
 			(from?: React.DependencyList, to?: React.DependencyList) => {
+				if (isInitialRender(renderCount.current)) {
+					return;
+				}
+
 				if (
 					componentRef.current &&
 					from?.every(Boolean) &&
@@ -245,10 +248,19 @@ export const PolymorphicMotion = React.forwardRef(
 			setPendingAnimation,
 		]);
 
+		React.useLayoutEffect(() => {
+			renderCount.current = renderCount.current + 1;
+		}, []);
+
 		usePreviousValueEffect(onChangeAnimate, [animate]);
 
 		React.useEffect(() => {
-			if (!componentRef.current || !initial || (initial === true && !animate)) {
+			if (
+				!isInitialRender(renderCount.current) ||
+				!componentRef.current ||
+				!initial ||
+				(initial === true && !animate)
+			) {
 				return;
 			}
 
@@ -309,3 +321,5 @@ export const PolymorphicMotion = React.forwardRef(
 		);
 	},
 );
+
+const isInitialRender = (count: number) => count <= 1;
