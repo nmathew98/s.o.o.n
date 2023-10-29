@@ -12,7 +12,7 @@ Renders an animatable HTML or SVG element
 
 Wrap a component in `Motion` to enable animations on them
 
-```typescript
+```JSX
 <Motion.div>{children}</Motion>
 ```
 
@@ -49,7 +49,7 @@ All direct children of `Presence` should be `Motion` and should specify a `key`,
 
 Exit animations are triggered on children when they are no longer rendered
 
-```typescript
+```JSX
 <Presence>
     {show && <Motion.div>{children}</Motion.div>}
 </Presence>
