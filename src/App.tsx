@@ -2,10 +2,12 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
+import { Motion } from "./Motion";
 
 function App() {
 	const [count, setCount] = useState(0);
 
+	const animateOptions = { opacity: count / 5 };
 	return (
 		<>
 			<div>
@@ -18,9 +20,16 @@ function App() {
 			</div>
 			<h1>Vite + React</h1>
 			<div className="card">
-				<button onClick={() => setCount(count => count + 1)}>
+				<Motion.button
+					key="test"
+					animate={animateOptions}
+					initial={{ opacity: 0.1 }}
+					onClick={() => setCount(count => count + 1)}>
 					count is {count}
-				</button>
+				</Motion.button>
+				<Motion.div initial={{ opacity: 0.1 }}>
+					<TestButton />
+				</Motion.div>
 				<p>
 					Edit <code>src/App.tsx</code> and save to test HMR
 				</p>
@@ -31,5 +40,15 @@ function App() {
 		</>
 	);
 }
+
+const TestButton = () => {
+	const [count, setCount] = useState(0);
+
+	return (
+		<button onClick={() => setCount(count => count + 1)}>
+			count is {count}
+		</button>
+	);
+};
 
 export default App;
