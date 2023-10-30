@@ -23,14 +23,14 @@ export const applyProps =
 export const isMotion = (instance: unknown | null) =>
 	Boolean((instance as PolymorphicMotionHandles)?.animateExit);
 
-export const childIsForwardRefWithKey = (
+export const isMotionChildWithKey = (
 	child: React.ReactNode,
 ): child is ReactElementWithKey =>
 	Boolean(
 		React.isValidElement(child) &&
 			isForwardRef(child) &&
 			child.key &&
-			(child.type as any)[bsKey] === MomentSymbol,
+			(child.type as any)[bsKey] == MomentSymbol,
 	);
 
 export const createLookup = (
@@ -38,5 +38,11 @@ export const createLookup = (
 	lookup: Map<string, ReactElementWithKey> = new Map(),
 ) => (children.forEach(child => lookup.set(child.key, child)), lookup);
 
-export const animateExit = (onExit: () => void) => (instance: unknown | null) =>
-	(instance as PolymorphicMotionHandles)?.animateExit?.().then(onExit);
+export const animateExit =
+	(onExit: () => void, context?: any) => (instance: unknown | null) => {
+		if (context) {
+			context.areChildrenExiting = true;
+		}
+
+		(instance as PolymorphicMotionHandles)?.animateExit?.().then(onExit);
+	};

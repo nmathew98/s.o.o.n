@@ -3,18 +3,21 @@ import React from "react";
 import {
 	animateExit,
 	applyProps,
-	childIsForwardRefWithKey,
+	isMotionChildWithKey,
 	createLookup,
 	toArray,
 } from "./utils";
+import { PresenceContext } from "./context";
 
 export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	initial,
 	children,
 	exitBeforeEnter,
 }) => {
+	const context = React.useContext(PresenceContext);
+
 	const nextChildren = toArray(children)
-		.filter(childIsForwardRefWithKey)
+		.filter(isMotionChildWithKey)
 		.map(applyProps({ initial }));
 	const nextChildrenLookup = createLookup(nextChildren);
 
@@ -57,6 +60,10 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		const onExit = () => {
 			previousChildrenLookup.delete(child.key);
 
+			if (isLastExitingChild && context) {
+				context.areChildrenExiting = false;
+			}
+
 			if (!exitBeforeEnter) {
 				forceRerender();
 			} else if (exitBeforeEnter && isLastExitingChild) {
@@ -66,7 +73,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 		const exitingChild = React.cloneElement(child, {
 			...child.props,
-			ref: animateExit(onExit),
+			ref: animateExit(onExit, context),
 		});
 
 		return exitingChild;
