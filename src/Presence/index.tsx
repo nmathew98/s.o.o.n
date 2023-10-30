@@ -14,7 +14,9 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	exitBeforeEnter,
 }) => {
 	const [_, setForcedRerenders] = React.useState(0);
-	const nextChildren = toArray(children).filter(childIsForwardRefWithKey);
+	const nextChildren = toArray(children)
+		.filter(childIsForwardRefWithKey)
+		.map(applyProps({ initial }));
 	const nextChildrenLookup = createLookup(nextChildren);
 
 	const isInitialRender = React.useRef(true);
@@ -37,8 +39,6 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 	const previousChildrenLookup = currentChildrenRef.current;
 	const previousChildren = [...currentChildrenRef.current.values()];
-	console.log("previousChildren", previousChildren);
-	console.log("nextChildren", nextChildren);
 	const exitingChildren = previousChildren.filter(
 		child => !nextChildrenLookup.has(child.key),
 	);

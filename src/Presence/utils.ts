@@ -12,11 +12,12 @@ export const toArray = (children?: React.ReactNode | React.ReactNode[]) => {
 };
 
 export const applyProps =
-	(props: PresenceProps) => (child: React.ReactElement) =>
+	(props: PresenceProps) =>
+	<T extends React.ReactElement>(child: T) =>
 		React.cloneElement(child, {
 			...child.props,
-			initial: props.initial === false ? props.initial : child.props,
-		});
+			initial: props.initial === false ? props.initial : child.props.initial,
+		}) as T;
 
 export const isMotion = (instance: unknown | null) =>
 	Boolean((instance as PolymorphicMotionHandles)?.animateExit);

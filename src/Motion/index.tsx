@@ -194,7 +194,6 @@ export const PolymorphicMotion = React.forwardRef(
 				setPendingAnimation(controls);
 
 				controls.finished.then(() => {
-					console.log("Finished!");
 					void setShow(false);
 				});
 
