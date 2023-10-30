@@ -1,7 +1,8 @@
+import type { PolymorphicMotionHandles } from "../Motion/types";
+import type { PresenceProps, ReactElementWithKey } from "./types";
 import React from "react";
 import { isForwardRef } from "react-is";
-import type { PresenceProps, ReactElementWithKey } from "./types";
-import { PolymorphicMotion, PolymorphicMotionHandles } from "../Motion";
+import { MomentSymbol, bsKey } from "../utils/constants";
 
 export const toArray = (children?: React.ReactNode | React.ReactNode[]) => {
 	const result: React.ReactNode[] = [];
@@ -28,8 +29,8 @@ export const childIsForwardRefWithKey = (
 	Boolean(
 		React.isValidElement(child) &&
 			isForwardRef(child) &&
-			child.type === PolymorphicMotion &&
-			child.key,
+			child.key &&
+			(child.type as any)[bsKey] === MomentSymbol,
 	);
 
 export const createLookup = (
