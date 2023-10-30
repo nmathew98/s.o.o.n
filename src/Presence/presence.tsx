@@ -6,6 +6,7 @@ import {
 	isMotionChildWithKey,
 	createLookup,
 	toArray,
+	mergeCurrentAndNextChildren,
 } from "./utils";
 import { PresenceContext } from "./context";
 
@@ -63,7 +64,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			previousChildrenLookup.delete(child.key);
 
 			if (isLastExitingChild) {
-				context?.isDoneExiting(id);
+				context?.isDoneExiting?.(id);
 				onExitEnd?.();
 			}
 
@@ -75,7 +76,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		};
 
 		const onStartExit = () => {
-			context?.isExiting(id);
+			context?.isExiting?.(id);
 		};
 
 		const exitingChild = React.cloneElement(child, {
@@ -87,10 +88,12 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	}) as ReactElementWithKey[];
 
 	if (!exitBeforeEnter) {
-		return [
-			...childrenToRender,
-			...nextChildren.filter(child => !previousChildrenLookup.has(child.key)),
-		];
+		return mergeCurrentAndNextChildren(
+			childrenToRender,
+			nextChildrenLookup,
+			exitingChildrenLookup,
+			previousChildrenLookup,
+		);
 	}
 
 	return childrenToRender;

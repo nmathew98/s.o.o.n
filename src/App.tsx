@@ -44,6 +44,9 @@ function App() {
 							count is {count} test2 (when 'Hide')
 						</Motion.button>
 					)}
+					<Motion.div key="test4">
+						<TestButton />
+					</Motion.div>
 					{!show && (
 						<Motion.button
 							key="test3"
@@ -53,7 +56,7 @@ function App() {
 							count is {count} test3 (when 'Show')
 						</Motion.button>
 					)}
-					<Motion.div key="test4">
+					<Motion.div key="test5">
 						<TestButton />
 					</Motion.div>
 				</Presence>

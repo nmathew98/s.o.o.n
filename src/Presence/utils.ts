@@ -44,3 +44,31 @@ export const animateExit =
 
 		(instance as PolymorphicMotionHandles)?.animateExit?.().then(onExit);
 	};
+
+export const mergeCurrentAndNextChildren = (
+	childrenToRender: ReactElementWithKey[],
+	nextChildrenLookup: Map<string, ReactElementWithKey>,
+	exitingChildrenLookup: Map<string, ReactElementWithKey>,
+	previousChildrenLookup: Map<string, ReactElementWithKey>,
+) => {
+	const newChildren = [...nextChildrenLookup.values()].filter(
+		child => !previousChildrenLookup.has(child.key),
+	);
+
+	return [
+		...childrenToRender.flatMap(child => {
+			if (!exitingChildrenLookup.has(child.key)) {
+				return child;
+			}
+
+			const nextChild = newChildren.shift();
+
+			if (nextChild) {
+				return [child, nextChild];
+			}
+
+			return child;
+		}),
+		...newChildren,
+	];
+};
