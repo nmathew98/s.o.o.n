@@ -5,13 +5,15 @@ export const PresenceContext = React.createContext(Object.create(null));
 export const PresenceProvider: React.FC<React.PropsWithChildren> = ({
 	children,
 }) => {
-	const areChildrenExiting = React.useRef(false);
+	const [areChildrenExiting, setAreChildrenExiting] = React.useState(false);
 
 	const context = React.useMemo(
 		() => ({
-			areChildrenExiting: areChildrenExiting.current,
+			areChildrenExiting,
+			toggleAreChildrenExiting: () =>
+				setAreChildrenExiting(areChildrenExiting => !areChildrenExiting),
 		}),
-		[],
+		[areChildrenExiting, setAreChildrenExiting],
 	);
 
 	return (
