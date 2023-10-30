@@ -14,6 +14,9 @@ dependencies:
   react-dom:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
+  react-is:
+    specifier: ^18.2.0
+    version: 18.2.0
 
 devDependencies:
   "@types/node":
@@ -25,6 +28,9 @@ devDependencies:
   "@types/react-dom":
     specifier: ^18.2.7
     version: 18.2.14
+  "@types/react-is":
+    specifier: ^18.2.3
+    version: 18.2.3
   "@typescript-eslint/eslint-plugin":
     specifier: ^6.0.0
     version: 6.9.0(@typescript-eslint/parser@6.9.0)(eslint@8.52.0)(typescript@5.2.2)
@@ -900,6 +906,15 @@ packages:
     resolution:
       {
         integrity: sha512-V835xgdSVmyQmI1KLV2BEIUgqEuinxp9O4G6g3FqO/SqLac049E53aysv0oEFD2kHfejeKU+ZqL2bcFWj9gLAQ==,
+      }
+    dependencies:
+      "@types/react": 18.2.32
+    dev: true
+
+  /@types/react-is@18.2.3:
+    resolution:
+      {
+        integrity: sha512-w45BV1PsuELGu0P+y7sy+w2sY7qMfDVFrf4+30smfViAxgnOV6MGwdCTAmz32BdYRr0E87xH6L6k6qBB2jjRvA==,
       }
     dependencies:
       "@types/react": 18.2.32
@@ -2653,6 +2668,13 @@ packages:
       loose-envify: 1.4.0
       react: 18.2.0
       scheduler: 0.23.0
+    dev: false
+
+  /react-is@18.2.0:
+    resolution:
+      {
+        integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==,
+      }
     dev: false
 
   /react@18.2.0:

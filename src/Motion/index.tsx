@@ -82,6 +82,7 @@ export const PolymorphicMotion = React.forwardRef(
 		}: PolymorphicMotionProps<T>,
 		ref: React.ForwardedRef<PolymorphicMotionHandles>,
 	) => {
+		const [show, setShow] = React.useState(true);
 		const pendingAnimation = React.useRef<null | Promise<unknown>>(null);
 		const componentRef = React.useRef<null | HTMLElement>(null);
 		const isInitialRender = React.useRef(true);
@@ -176,7 +177,7 @@ export const PolymorphicMotion = React.forwardRef(
 		const createHandles = (): PolymorphicMotionHandles => ({
 			animateExit: async () => {
 				if (!componentRef.current || !exit) {
-					return;
+					return void setShow(false);
 				}
 
 				const { transition: exitTransition, ...rest } = exit;
@@ -189,6 +190,8 @@ export const PolymorphicMotion = React.forwardRef(
 				);
 
 				setPendingAnimation(controls);
+
+				controls.finished.then(() => void setShow(false));
 
 				await controls.finished;
 			},
@@ -217,6 +220,10 @@ export const PolymorphicMotion = React.forwardRef(
 				await pendingAnimation.current;
 
 				const animate = () => {
+					if (!componentRef.current) {
+						return;
+					}
+
 					const controls = motionAnimate(
 						componentRef.current as HTMLElement,
 						rest,
@@ -232,16 +239,28 @@ export const PolymorphicMotion = React.forwardRef(
 					const scrollOptions =
 						typeof scroll === "boolean" ? undefined : scroll;
 
-					return void motionScroll(animate(), scrollOptions);
+					const controls = animate();
+
+					if (!controls) {
+						return;
+					}
+
+					return void motionScroll(controls, scrollOptions);
 				}
 
 				if (inView) {
 					const inViewOptions =
 						typeof inView === "boolean" ? undefined : inView;
 
+					const controls = animate();
+
+					if (!controls) {
+						return;
+					}
+
 					return void motionInView(
 						componentRef.current as HTMLElement,
-						() => animate().stop,
+						() => controls.stop,
 						inViewOptions,
 					);
 				}
@@ -303,6 +322,10 @@ export const PolymorphicMotion = React.forwardRef(
 		usePreviousValueEffect(onChangeAnimate, [animate]);
 
 		const Component = as as React.ElementType;
+
+		if (!show) {
+			return null;
+		}
 
 		return (
 			<Component
