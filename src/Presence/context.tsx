@@ -1,19 +1,38 @@
 import React from "react";
 
-export const PresenceContext = React.createContext(Object.create(null));
+interface PresenceContext {
+	registerPresence: (id: string) => void;
+	isExiting: (id?: string) => void;
+	isDoneExiting: (id?: string) => void;
+	currentState: (id?: string) => boolean | null;
+}
+
+export const PresenceContext = React.createContext<PresenceContext>(
+	Object.create(null),
+);
 
 export const PresenceProvider: React.FC<React.PropsWithChildren> = ({
 	children,
 }) => {
-	const [areChildrenExiting, setAreChildrenExiting] = React.useState(false);
+	const states = React.useRef(new Map<string, boolean>());
 
 	const context = React.useMemo(
 		() => ({
-			areChildrenExiting,
-			isExiting: () => setAreChildrenExiting(true),
-			doneExiting: () => setAreChildrenExiting(false),
+			registerPresence: (id: string) => states.current.set(id, false),
+			isExiting: (id?: string) => {
+				if (id) {
+					states.current.set(id, true);
+				}
+			},
+			isDoneExiting: (id?: string) => {
+				if (id) {
+					states.current.set(id, false);
+				}
+			},
+			currentState: (id?: string) =>
+				id && states.current.has(id) ? Boolean(states.current.get(id)) : null,
 		}),
-		[areChildrenExiting, setAreChildrenExiting],
+		[],
 	);
 
 	return (

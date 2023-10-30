@@ -39,8 +39,8 @@ export const createLookup = (
 ) => (children.forEach(child => lookup.set(child.key, child)), lookup);
 
 export const animateExit =
-	(onExit: () => void, context?: any) => (instance: unknown | null) => {
-		context?.isExiting();
+	(onExit: () => void, onStart?: () => void) => (instance: unknown | null) => {
+		onStart?.();
 
 		(instance as PolymorphicMotionHandles)?.animateExit?.().then(onExit);
 	};
