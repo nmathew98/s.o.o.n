@@ -49,7 +49,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	);
 	const exitingChildrenLookup = createLookup(exitingChildren);
 
-	const childrenToRender = previousChildren.map(child => {
+	const currentChildren = previousChildren.map(child => {
 		if (!exitingChildrenLookup.has(child.key)) {
 			if (nextChildrenLookup.has(child.key)) {
 				return nextChildrenLookup.get(child.key);
@@ -89,12 +89,12 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 	if (!exitBeforeEnter) {
 		return mergeCurrentAndNextChildren(
-			childrenToRender,
+			currentChildren,
 			nextChildrenLookup,
 			exitingChildrenLookup,
 			previousChildrenLookup,
 		);
 	}
 
-	return childrenToRender;
+	return currentChildren;
 };
