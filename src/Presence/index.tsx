@@ -23,7 +23,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	const currentChildrenRef = React.useRef(createLookup(nextChildren));
 
 	const forceRerender = () =>
-		setForcedRerenders(forcedRerender => forcedRerender + 1);
+		setForcedRerenders(forcedRerenders => forcedRerenders + 1);
 
 	React.useLayoutEffect(() => {
 		isInitialRender.current = false;
@@ -37,13 +37,15 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 
 	const previousChildrenLookup = currentChildrenRef.current;
 	const previousChildren = [...currentChildrenRef.current.values()];
+	console.log("previousChildren", previousChildren);
+	console.log("nextChildren", nextChildren);
 	const exitingChildren = previousChildren.filter(
 		child => !nextChildrenLookup.has(child.key),
 	);
 	const exitingChildrenLookup = createLookup(exitingChildren);
 	exitingChildrenRef.current = exitingChildrenLookup;
 
-	const childrenToRender = previousChildren.map((child, idx) => {
+	const childrenToRender = previousChildren.flatMap((child, idx) => {
 		if (!exitingChildrenLookup.has(child.key)) {
 			if (nextChildrenLookup.has(child.key)) {
 				return nextChildrenLookup.get(child.key);
@@ -68,18 +70,13 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			ref: animateExit(onExit, isLastExitingChild),
 		});
 
-		if (exitBeforeEnter) {
+		const enteringChild = nextChildren.splice(idx, 1).pop();
+
+		if (exitBeforeEnter || !enteringChild) {
 			return exitingChild;
 		}
 
-		const enteringChild = nextChildren.splice(idx, 1).pop();
-
-		return (
-			<React.Fragment key={enteringChild?.key ?? exitingChild.key}>
-				{exitingChild}
-				{enteringChild}
-			</React.Fragment>
-		);
+		return [exitingChild, enteringChild];
 	});
 
 	if (!exitBeforeEnter) {
@@ -87,10 +84,6 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			...childrenToRender,
 			...nextChildren.filter(child => !previousChildrenLookup.has(child.key)),
 		];
-	}
-
-	if (!exitingChildren.length) {
-		return nextChildren;
 	}
 
 	return childrenToRender;

@@ -30,7 +30,7 @@ function App() {
 					}}>
 					{!show ? "Show" : "Hide"} {count}
 				</button>
-				<Presence exitBeforeEnter>
+				<Presence>
 					<PolymorphicMotion
 						as="button"
 						key="test"
@@ -45,7 +45,17 @@ function App() {
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
-							count is {count}
+							count is {count} test2
+						</PolymorphicMotion>
+					)}
+					{!show && (
+						<PolymorphicMotion
+							as="button"
+							key="test3"
+							initial={{ opacity: 0.1 }}
+							exit={{ opacity: 0, transition: { duration: 3 } }}
+							onClick={() => setCount(count => count + 1)}>
+							count is {count} test3
 						</PolymorphicMotion>
 					)}
 				</Presence>
