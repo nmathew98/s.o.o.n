@@ -2,12 +2,15 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import { Motion } from "./Motion";
+import { Motion, PolymorphicMotion } from "./Motion";
+import { Presence } from "./Presence";
 
 function App() {
+	const [show, setShow] = useState(false);
 	const [count, setCount] = useState(0);
 
 	const animateOptions = { opacity: count / 5 };
+
 	return (
 		<>
 			<div>
@@ -20,23 +23,90 @@ function App() {
 			</div>
 			<h1>Vite + React</h1>
 			<div className="card">
-				<Motion.button
-					key="test"
-					animate={animateOptions}
-					initial={{ opacity: 0.1 }}
-					onClick={() => setCount(count => count + 1)}>
-					count is {count}
-				</Motion.button>
-				<Motion.div initial={{ opacity: 0.1 }}>
-					<TestButton />
-				</Motion.div>
+				<button
+					onClick={() => {
+						setShow(show => !show);
+						setCount(count => count + 1);
+					}}>
+					{!show ? "Show" : "Hide"} {count} !exitBeforeEnter
+				</button>
+				<Presence>
+					<PolymorphicMotion
+						as="button"
+						key="test"
+						initial={{ opacity: 0.1 }}
+						onClick={() => setCount(count => count + 1)}>
+						count is {count}
+					</PolymorphicMotion>
+					{show && (
+						<PolymorphicMotion
+							as="button"
+							key="test2"
+							initial={{ opacity: 0.1 }}
+							exit={{ opacity: 0, transition: { duration: 3 } }}
+							onClick={() => setCount(count => count + 1)}>
+							count is {count} test2 (when 'Hide')
+						</PolymorphicMotion>
+					)}
+					{!show && (
+						<PolymorphicMotion
+							as="button"
+							key="test3"
+							initial={{ opacity: 0.1 }}
+							exit={{ opacity: 0, transition: { duration: 3 } }}
+							onClick={() => setCount(count => count + 1)}>
+							count is {count} test3 (when 'Show')
+						</PolymorphicMotion>
+					)}
+					<PolymorphicMotion as="div" key="test4">
+						<TestButton />
+					</PolymorphicMotion>
+				</Presence>
+			</div>
+			<div className="card">
+				<button
+					onClick={() => {
+						setShow(show => !show);
+						setCount(count => count + 1);
+					}}>
+					{!show ? "Show" : "Hide"} {count} exitBeforeEnter
+				</button>
+				<Presence exitBeforeEnter>
+					<PolymorphicMotion
+						as="button"
+						key="test"
+						initial={{ opacity: 0.1 }}
+						onClick={() => setCount(count => count + 1)}>
+						count is {count}
+					</PolymorphicMotion>
+					{show && (
+						<PolymorphicMotion
+							as="button"
+							key="test2"
+							initial={{ opacity: 0.1 }}
+							exit={{ opacity: 0, transition: { duration: 3 } }}
+							onClick={() => setCount(count => count + 1)}>
+							count is {count} test2 (when 'Hide')
+						</PolymorphicMotion>
+					)}
+					{!show && (
+						<PolymorphicMotion
+							as="button"
+							key="test3"
+							initial={{ opacity: 0.1 }}
+							exit={{ opacity: 0, transition: { duration: 3 } }}
+							onClick={() => setCount(count => count + 1)}>
+							count is {count} test3 (when 'Show')
+						</PolymorphicMotion>
+					)}
+					<PolymorphicMotion as="div" key="test4">
+						<TestButton />
+					</PolymorphicMotion>
+				</Presence>
 				<p>
 					Edit <code>src/App.tsx</code> and save to test HMR
 				</p>
 			</div>
-			<p className="read-the-docs">
-				Click on the Vite and React logos to learn more
-			</p>
 		</>
 	);
 }
@@ -46,7 +116,7 @@ const TestButton = () => {
 
 	return (
 		<button onClick={() => setCount(count => count + 1)}>
-			count is {count}
+			count is {count} !!
 		</button>
 	);
 };

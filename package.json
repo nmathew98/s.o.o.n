@@ -22,7 +22,8 @@
 		"format": "prettier .  --write"
 	},
 	"dependencies": {
-		"motion": "^10.16.4"
+		"motion": "^10.16.4",
+		"react-is": "^18.2.0"
 	},
 	"peerDependencies": {
 		"react": "^18.2.0",
@@ -32,6 +33,7 @@
 		"@types/node": "^20.8.9",
 		"@types/react": "^18.2.15",
 		"@types/react-dom": "^18.2.7",
+		"@types/react-is": "^18.2.3",
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
 		"@typescript-eslint/parser": "^6.0.0",
 		"@vitejs/plugin-react-swc": "^3.3.2",

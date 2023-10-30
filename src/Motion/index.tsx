@@ -26,6 +26,7 @@ export const Motion: Motion = new Proxy(Object.create(null), {
 		),
 });
 
+let count = 0;
 export type PolymorphicMotionProps<
 	T extends keyof React.JSX.IntrinsicElements,
 > = {
@@ -175,6 +176,7 @@ export const PolymorphicMotion = React.forwardRef(
 
 		const createHandles = (): PolymorphicMotionHandles => ({
 			animateExit: async () => {
+				count++;
 				if (!componentRef.current || !exit) {
 					return;
 				}
@@ -189,6 +191,8 @@ export const PolymorphicMotion = React.forwardRef(
 				);
 
 				setPendingAnimation(controls);
+
+				controls.finished;
 
 				await controls.finished;
 			},
@@ -217,6 +221,10 @@ export const PolymorphicMotion = React.forwardRef(
 				await pendingAnimation.current;
 
 				const animate = () => {
+					if (!componentRef.current) {
+						return;
+					}
+
 					const controls = motionAnimate(
 						componentRef.current as HTMLElement,
 						rest,
@@ -232,16 +240,28 @@ export const PolymorphicMotion = React.forwardRef(
 					const scrollOptions =
 						typeof scroll === "boolean" ? undefined : scroll;
 
-					return void motionScroll(animate(), scrollOptions);
+					const controls = animate();
+
+					if (!controls) {
+						return;
+					}
+
+					return void motionScroll(controls, scrollOptions);
 				}
 
 				if (inView) {
 					const inViewOptions =
 						typeof inView === "boolean" ? undefined : inView;
 
+					const controls = animate();
+
+					if (!controls) {
+						return;
+					}
+
 					return void motionInView(
 						componentRef.current as HTMLElement,
-						() => animate().stop,
+						() => controls.stop,
 						inViewOptions,
 					);
 				}
