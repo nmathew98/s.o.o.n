@@ -48,7 +48,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	);
 	const exitingChildrenLookup = createLookup(exitingChildren);
 
-	const childrenToRender = previousChildren.flatMap(child => {
+	const childrenToRender = previousChildren.map(child => {
 		if (!exitingChildrenLookup.has(child.key)) {
 			if (nextChildrenLookup.has(child.key)) {
 				return nextChildrenLookup.get(child.key);
