@@ -18,9 +18,5 @@ module.exports = {
 			{ argsIgnorePattern: "_*", varsIgnorePattern: "_*" },
 		],
 		curly: 2,
-		"react-refresh/only-export-components": [
-			"warn",
-			{ allowConstantExport: true },
-		],
 	},
 };

@@ -3,7 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import { Motion } from "./Motion";
-import { Presence } from "./Presence";
+import { Presence } from "./Presence/presence";
 
 function App() {
 	const [show, setShow] = useState(false);
