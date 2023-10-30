@@ -2,14 +2,12 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import { Motion, PolymorphicMotion } from "./Motion";
+import { Motion } from "./Motion";
 import { Presence } from "./Presence";
 
 function App() {
 	const [show, setShow] = useState(false);
 	const [count, setCount] = useState(0);
-
-	const animateOptions = { opacity: count / 5 };
 
 	return (
 		<>
@@ -31,36 +29,33 @@ function App() {
 					{!show ? "Show" : "Hide"} {count} !exitBeforeEnter
 				</button>
 				<Presence>
-					<PolymorphicMotion
-						as="button"
+					<Motion.button
 						key="test"
 						initial={{ opacity: 0.1 }}
 						onClick={() => setCount(count => count + 1)}>
 						count is {count}
-					</PolymorphicMotion>
+					</Motion.button>
 					{show && (
-						<PolymorphicMotion
-							as="button"
+						<Motion.button
 							key="test2"
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
 							count is {count} test2 (when 'Hide')
-						</PolymorphicMotion>
+						</Motion.button>
 					)}
 					{!show && (
-						<PolymorphicMotion
-							as="button"
+						<Motion.button
 							key="test3"
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
 							count is {count} test3 (when 'Show')
-						</PolymorphicMotion>
+						</Motion.button>
 					)}
-					<PolymorphicMotion as="div" key="test4">
+					<Motion.div key="test4">
 						<TestButton />
-					</PolymorphicMotion>
+					</Motion.div>
 				</Presence>
 			</div>
 			<div className="card">
@@ -72,36 +67,33 @@ function App() {
 					{!show ? "Show" : "Hide"} {count} exitBeforeEnter
 				</button>
 				<Presence exitBeforeEnter>
-					<PolymorphicMotion
-						as="button"
+					<Motion.button
 						key="test"
 						initial={{ opacity: 0.1 }}
 						onClick={() => setCount(count => count + 1)}>
 						count is {count}
-					</PolymorphicMotion>
+					</Motion.button>
 					{show && (
-						<PolymorphicMotion
-							as="button"
+						<Motion.button
 							key="test2"
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
 							count is {count} test2 (when 'Hide')
-						</PolymorphicMotion>
+						</Motion.button>
 					)}
 					{!show && (
-						<PolymorphicMotion
-							as="button"
+						<Motion.button
 							key="test3"
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
 							count is {count} test3 (when 'Show')
-						</PolymorphicMotion>
+						</Motion.button>
 					)}
-					<PolymorphicMotion as="div" key="test4">
+					<Motion.div key="test4">
 						<TestButton />
-					</PolymorphicMotion>
+					</Motion.div>
 				</Presence>
 				<p>
 					Edit <code>src/App.tsx</code> and save to test HMR

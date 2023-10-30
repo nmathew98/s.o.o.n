@@ -1,60 +1,46 @@
+import type {
+	AnimationControls,
+	CSSStyleDeclarationWithTransform,
+} from "motion";
+import type {
+	KeyframesDefinition,
+	MotionProps,
+	PolymorphicMotionHandles,
+	PolymorphicMotionProps,
+} from "./types";
+import React from "react";
 import {
-	type AnimationControls,
-	type AnimationOptionsWithOverrides,
-	type CSSStyleDeclarationWithTransform,
-	type ValueKeyframe,
-	type InViewOptions,
-	type ScrollOptions,
 	animate as motionAnimate,
 	inView as motionInView,
 	scroll as motionScroll,
 } from "motion";
-import React from "react";
-import { usePreviousValueEffect } from "../hooks/use-previous-value-effect";
+import { usePreviousValueEffect } from "./use-previous-value-effect";
+import { MomentSymbol, bsKey } from "../utils/constants";
 
-export type Motion = {
-	[K in keyof React.JSX.IntrinsicElements]: React.FC<
-		Omit<PolymorphicMotionProps<K>, "as">
-	>;
-};
+const memo = new Map();
 
-export const Motion: Motion = new Proxy(Object.create(null), {
-	get:
-		<T extends keyof React.JSX.IntrinsicElements>(_: never, as: T) =>
-		(props: Omit<PolymorphicMotionProps<T>, "as">) => (
-			<PolymorphicMotion as={as} {...props} />
-		),
-});
-
-let count = 0;
-export type PolymorphicMotionProps<
+export const PolymorphicMotionFactory = <
 	T extends keyof React.JSX.IntrinsicElements,
-> = {
-	as: T;
-	ref?: React.Ref<PolymorphicMotionHandles>;
-	initial?: boolean | KeyframesDefinition;
-	animate?: KeyframesDefinition;
-	hover?: KeyframesDefinition;
-	press?: KeyframesDefinition;
-	exit?: KeyframesDefinition;
-	transition?: AnimationOptionsWithOverrides;
-	inView?: boolean | InViewOptions;
-	scroll?: boolean | ScrollOptions;
-	onMotionStart?: (controls: AnimationControls) => void;
-	onMotionEnd?: (controls: AnimationControls) => void;
-	onHoverStart?: React.MouseEventHandler<T>;
-	onHoverEnd?: React.MouseEventHandler<T>;
-	onPressStart?: React.MouseEventHandler<T>;
-	onPressEnd?: React.MouseEventHandler<T>;
-} & Omit<React.DetailedHTMLProps<React.HTMLAttributes<T>, T>, "ref">;
+>({
+	as,
+}: MotionProps<T>) => {
+	if (memo.has(as)) {
+		return memo.get(as);
+	}
 
-type KeyframesDefinition = {
-	[K in keyof CSSStyleDeclarationWithTransform]?: ValueKeyframe;
-} & { transition?: AnimationOptionsWithOverrides };
+	const result = React.forwardRef(
+		(
+			props: Omit<PolymorphicMotionProps<T>, "as">,
+			ref: React.ForwardedRef<PolymorphicMotionHandles>,
+		) => <PolymorphicMotion as={as} {...props} ref={ref} />,
+	);
 
-export interface PolymorphicMotionHandles {
-	animateExit: () => Promise<void>;
-}
+	(result as any)[bsKey] = MomentSymbol;
+
+	memo.set(as, result);
+
+	return result;
+};
 
 export const PolymorphicMotion = React.forwardRef(
 	<T extends keyof React.JSX.IntrinsicElements>(
@@ -176,7 +162,6 @@ export const PolymorphicMotion = React.forwardRef(
 
 		const createHandles = (): PolymorphicMotionHandles => ({
 			animateExit: async () => {
-				count++;
 				if (!componentRef.current || !exit) {
 					return;
 				}
