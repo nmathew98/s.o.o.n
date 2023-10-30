@@ -83,7 +83,6 @@ export const PolymorphicMotion = React.forwardRef(
 		}: PolymorphicMotionProps<T>,
 		ref: React.ForwardedRef<PolymorphicMotionHandles>,
 	) => {
-		const [show, setShow] = React.useState(true);
 		const pendingAnimation = React.useRef<null | Promise<unknown>>(null);
 		const componentRef = React.useRef<null | HTMLElement>(null);
 		const isInitialRender = React.useRef(true);
@@ -179,7 +178,7 @@ export const PolymorphicMotion = React.forwardRef(
 			animateExit: async () => {
 				count++;
 				if (!componentRef.current || !exit) {
-					return void setShow(false);
+					return;
 				}
 
 				const { transition: exitTransition, ...rest } = exit;
@@ -193,9 +192,7 @@ export const PolymorphicMotion = React.forwardRef(
 
 				setPendingAnimation(controls);
 
-				controls.finished.then(() => {
-					void setShow(false);
-				});
+				controls.finished;
 
 				await controls.finished;
 			},
@@ -326,10 +323,6 @@ export const PolymorphicMotion = React.forwardRef(
 		usePreviousValueEffect(onChangeAnimate, [animate]);
 
 		const Component = as as React.ElementType;
-
-		if (!show) {
-			return null;
-		}
 
 		return (
 			<Component

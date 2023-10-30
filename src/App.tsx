@@ -28,7 +28,7 @@ function App() {
 						setShow(show => !show);
 						setCount(count => count + 1);
 					}}>
-					{!show ? "Show" : "Hide"} {count}
+					{!show ? "Show" : "Hide"} {count} !exitBeforeEnter
 				</button>
 				<Presence>
 					<PolymorphicMotion
@@ -45,7 +45,7 @@ function App() {
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
-							count is {count} test2
+							count is {count} test2 (when 'Hide')
 						</PolymorphicMotion>
 					)}
 					{!show && (
@@ -55,17 +55,58 @@ function App() {
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
-							count is {count} test3
+							count is {count} test3 (when 'Show')
 						</PolymorphicMotion>
 					)}
+					<PolymorphicMotion as="div" key="test4">
+						<TestButton />
+					</PolymorphicMotion>
+				</Presence>
+			</div>
+			<div className="card">
+				<button
+					onClick={() => {
+						setShow(show => !show);
+						setCount(count => count + 1);
+					}}>
+					{!show ? "Show" : "Hide"} {count} exitBeforeEnter
+				</button>
+				<Presence exitBeforeEnter>
+					<PolymorphicMotion
+						as="button"
+						key="test"
+						initial={{ opacity: 0.1 }}
+						onClick={() => setCount(count => count + 1)}>
+						count is {count}
+					</PolymorphicMotion>
+					{show && (
+						<PolymorphicMotion
+							as="button"
+							key="test2"
+							initial={{ opacity: 0.1 }}
+							exit={{ opacity: 0, transition: { duration: 3 } }}
+							onClick={() => setCount(count => count + 1)}>
+							count is {count} test2 (when 'Hide')
+						</PolymorphicMotion>
+					)}
+					{!show && (
+						<PolymorphicMotion
+							as="button"
+							key="test3"
+							initial={{ opacity: 0.1 }}
+							exit={{ opacity: 0, transition: { duration: 3 } }}
+							onClick={() => setCount(count => count + 1)}>
+							count is {count} test3 (when 'Show')
+						</PolymorphicMotion>
+					)}
+					<PolymorphicMotion as="div" key="test4">
+						<TestButton />
+					</PolymorphicMotion>
 				</Presence>
 				<p>
 					Edit <code>src/App.tsx</code> and save to test HMR
 				</p>
 			</div>
-			<p className="read-the-docs">
-				Click on the Vite and React logos to learn more
-			</p>
 		</>
 	);
 }
@@ -75,7 +116,7 @@ const TestButton = () => {
 
 	return (
 		<button onClick={() => setCount(count => count + 1)}>
-			count is {count}
+			count is {count} !!
 		</button>
 	);
 };

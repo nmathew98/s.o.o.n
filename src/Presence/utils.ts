@@ -37,13 +37,5 @@ export const createLookup = (
 	lookup: Map<string, ReactElementWithKey> = new Map(),
 ) => (children.forEach(child => lookup.set(child.key, child)), lookup);
 
-export const animateExit =
-	(onExit: () => void, isLastExitingChild?: boolean) =>
-	(instance: unknown | null) =>
-		(instance as PolymorphicMotionHandles)?.animateExit?.().then(() => {
-			if (!isLastExitingChild) {
-				return;
-			}
-
-			onExit();
-		});
+export const animateExit = (onExit: () => void) => (instance: unknown | null) =>
+	(instance as PolymorphicMotionHandles)?.animateExit?.().then(onExit);

@@ -1,5 +1,5 @@
 import React from "react";
-import type { PresenceProps } from "./types";
+import type { PresenceProps, ReactElementWithKey } from "./types";
 import {
 	animateExit,
 	applyProps,
@@ -13,15 +13,14 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	children,
 	exitBeforeEnter,
 }) => {
-	const [_, setForcedRerenders] = React.useState(0);
 	const nextChildren = toArray(children)
 		.filter(childIsForwardRefWithKey)
 		.map(applyProps({ initial }));
 	const nextChildrenLookup = createLookup(nextChildren);
 
+	const [_, setForcedRerenders] = React.useState(0);
 	const isInitialRender = React.useRef(true);
 
-	const exitingChildrenRef = React.useRef(new Map());
 	const currentChildrenRef = React.useRef(createLookup(nextChildren));
 
 	const forceRerender = () =>
@@ -34,7 +33,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 	});
 
 	if (isInitialRender.current) {
-		return nextChildren.map(applyProps({ initial }));
+		return nextChildren;
 	}
 
 	const previousChildrenLookup = currentChildrenRef.current;
@@ -43,9 +42,8 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		child => !nextChildrenLookup.has(child.key),
 	);
 	const exitingChildrenLookup = createLookup(exitingChildren);
-	exitingChildrenRef.current = exitingChildrenLookup;
 
-	const childrenToRender = previousChildren.flatMap((child, idx) => {
+	const childrenToRender = previousChildren.flatMap(child => {
 		if (!exitingChildrenLookup.has(child.key)) {
 			if (nextChildrenLookup.has(child.key)) {
 				return nextChildrenLookup.get(child.key);
@@ -57,27 +55,22 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		const isLastExitingChild = exitingChildren.at(-1)?.key === child.key;
 
 		const onExit = () => {
-			exitingChildrenRef.current.delete(child.key);
-			currentChildrenRef.current.delete(child.key);
+			previousChildrenLookup.delete(child.key);
 
-			if (exitBeforeEnter) {
+			if (!exitBeforeEnter) {
+				forceRerender();
+			} else if (exitBeforeEnter && isLastExitingChild) {
 				forceRerender();
 			}
 		};
 
 		const exitingChild = React.cloneElement(child, {
 			...child.props,
-			ref: animateExit(onExit, isLastExitingChild),
+			ref: animateExit(onExit),
 		});
 
-		const enteringChild = nextChildren.splice(idx, 1).pop();
-
-		if (exitBeforeEnter || !enteringChild) {
-			return exitingChild;
-		}
-
-		return [exitingChild, enteringChild];
-	});
+		return exitingChild;
+	}) as ReactElementWithKey[];
 
 	if (!exitBeforeEnter) {
 		return [
