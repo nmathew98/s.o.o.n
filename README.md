@@ -55,13 +55,32 @@ Exit animations are triggered on children when they are no longer rendered
 </Presence>
 ```
 
+or
+
+```JSX
+<PresenceProvider>
+  <Parent>
+    <ChildA>
+      <Presence>{children}</Presence>
+      <Presence>{children}</Presence>
+    </ChildA>
+  <Parent>
+<PresenceProvider>
+```
+
 #### Props
 
+- `id`
+  - An id for the component
+  - Should be used with the hooks `useRegisterPresence` and `usePresence`
+  - If the parent component needs to know when all exit animations are finished then `onExitEnd` will trigger a rerender and `usePresence` stores the exit animation state
 - `initial`
   - Disable initial animations on all children
 - `exitBeforeEnter`
   - If `true` waits until all exiting children animate out before animating in new children
   - Otherwise new children are animated in as exiting children animate out
+- `onExitEnd`
+  - Callback when all exit animations have finished
 
 ## Contributions
 
