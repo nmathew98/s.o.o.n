@@ -61,7 +61,7 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 			previousChildrenLookup.delete(child.key);
 
 			if (isLastExitingChild) {
-				context?.toggleAreChildrenExiting();
+				context?.doneExiting();
 			}
 
 			if (!exitBeforeEnter) {

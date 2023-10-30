@@ -40,7 +40,7 @@ export const createLookup = (
 
 export const animateExit =
 	(onExit: () => void, context?: any) => (instance: unknown | null) => {
-		context?.toggleAreChildrenExiting();
+		context?.isExiting();
 
 		(instance as PolymorphicMotionHandles)?.animateExit?.().then(onExit);
 	};

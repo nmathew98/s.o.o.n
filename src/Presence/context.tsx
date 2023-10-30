@@ -10,8 +10,8 @@ export const PresenceProvider: React.FC<React.PropsWithChildren> = ({
 	const context = React.useMemo(
 		() => ({
 			areChildrenExiting,
-			toggleAreChildrenExiting: () =>
-				setAreChildrenExiting(areChildrenExiting => !areChildrenExiting),
+			isExiting: () => setAreChildrenExiting(true),
+			doneExiting: () => setAreChildrenExiting(false),
 		}),
 		[areChildrenExiting, setAreChildrenExiting],
 	);
