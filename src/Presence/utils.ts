@@ -18,7 +18,7 @@ export const applyProps =
 		React.cloneElement(child, {
 			...child.props,
 			initial: props.initial === false ? props.initial : child.props.initial,
-		}) as T;
+		});
 
 export const isMotion = (instance: unknown | null) =>
 	Boolean((instance as PolymorphicMotionHandles)?.animateExit);
@@ -33,10 +33,16 @@ export const isMotionChildWithKey = (
 			(child.type as any)[bsKey] == MomentSymbol,
 	);
 
-export const createLookup = (
+export const createChildLookup = <K extends string | number = string>(
 	children: ReactElementWithKey[],
-	lookup: Map<string, ReactElementWithKey> = new Map(),
-) => (children.forEach(child => lookup.set(child.key, child)), lookup);
+	by: (value: ReactElementWithKey, index: number) => K = value =>
+		value.key as K,
+	lookup: Map<K, ReactElementWithKey> = new Map(),
+) =>
+	children.reduce(
+		(lookup, child, index) => lookup.set(by(child, index), child),
+		lookup,
+	);
 
 export const animateExit =
 	(onExit: () => void, onStart?: () => void) => (instance: unknown | null) => {
@@ -45,30 +51,32 @@ export const animateExit =
 		(instance as PolymorphicMotionHandles)?.animateExit?.().then(onExit);
 	};
 
-export const mergeCurrentAndNextChildren = (
-	childrenToRender: ReactElementWithKey[],
-	nextChildrenLookup: Map<string, ReactElementWithKey>,
-	exitingChildrenLookup: Map<string, ReactElementWithKey>,
-	previousChildrenLookup: Map<string, ReactElementWithKey>,
+export const mergeNextChildrenAndExitingChildren = (
+	children: React.ReactNode[],
+	exitingChildren: ReactElementWithKey[],
 ) => {
-	const newChildren = [...nextChildrenLookup.values()].filter(
-		child => !previousChildrenLookup.has(child.key),
+	const exitingChildrenCopy = [...exitingChildren];
+
+	const currentChildren = [...children].map(child =>
+		!child ? exitingChildrenCopy.shift() : child,
 	);
 
-	return [
-		...childrenToRender.flatMap(child => {
-			if (!exitingChildrenLookup.has(child.key)) {
-				return child;
-			}
-
-			const nextChild = newChildren.shift();
-
-			if (nextChild) {
-				return [child, nextChild];
-			}
-
-			return child;
-		}),
-		...newChildren,
-	];
+	return [...currentChildren, ...exitingChildrenCopy];
 };
+
+export const mergePreviousChildrenWithNextChildrenAndExitingChildren = (
+	previousChildren: ReactElementWithKey[],
+	nextChildrenLookup: Map<string, ReactElementWithKey>,
+	exitingChildrenLookup: Map<string, ReactElementWithKey>,
+) =>
+	previousChildren.map(child => {
+		if (nextChildrenLookup.has(child.key)) {
+			return nextChildrenLookup.get(child.key);
+		}
+
+		if (exitingChildrenLookup.has(child.key)) {
+			return exitingChildrenLookup.get(child.key);
+		}
+
+		return child;
+	});
