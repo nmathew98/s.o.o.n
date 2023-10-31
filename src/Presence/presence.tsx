@@ -86,7 +86,9 @@ export const Presence: React.FC<React.PropsWithChildren<PresenceProps>> = ({
 		return mergeNextChildrenAndExitingChildren(
 			unfilteredChildren,
 			exitingChildren,
-		).filter(isMotionChildWithKey);
+		)
+			.filter(isMotionChildWithKey)
+			.map(applyProps({ initial }));
 	}
 
 	return mergePreviousChildrenWithNextChildrenAndExitingChildren(
