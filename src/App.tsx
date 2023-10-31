@@ -30,7 +30,7 @@ function App() {
 				</button>
 				<Presence>
 					<Motion.button
-						key="test"
+						key="test1"
 						initial={{ opacity: 0.1 }}
 						onClick={() => setCount(count => count + 1)}>
 						count is {count}
@@ -44,19 +44,24 @@ function App() {
 							count is {count} test2 (when 'Hide')
 						</Motion.button>
 					)}
-					<Motion.div key="test4">
+					<Motion.div key="test3">
 						<TestButton />
 					</Motion.div>
+					{show && (
+						<Motion.div key="test4">
+							<TestButton />
+						</Motion.div>
+					)}
 					{!show && (
 						<Motion.button
-							key="test3"
+							key="test5"
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
 							count is {count} test3 (when 'Show')
 						</Motion.button>
 					)}
-					<Motion.div key="test5">
+					<Motion.div key="test6">
 						<TestButton />
 					</Motion.div>
 				</Presence>
@@ -71,7 +76,7 @@ function App() {
 				</button>
 				<Presence exitBeforeEnter>
 					<Motion.button
-						key="test"
+						key="test1"
 						initial={{ opacity: 0.1 }}
 						onClick={() => setCount(count => count + 1)}>
 						count is {count}
@@ -85,16 +90,24 @@ function App() {
 							count is {count} test2 (when 'Hide')
 						</Motion.button>
 					)}
+					<Motion.div key="test3">
+						<TestButton />
+					</Motion.div>
+					{show && (
+						<Motion.div key="test4">
+							<TestButton />
+						</Motion.div>
+					)}
 					{!show && (
 						<Motion.button
-							key="test3"
+							key="test5"
 							initial={{ opacity: 0.1 }}
 							exit={{ opacity: 0, transition: { duration: 3 } }}
 							onClick={() => setCount(count => count + 1)}>
 							count is {count} test3 (when 'Show')
 						</Motion.button>
 					)}
-					<Motion.div key="test4">
+					<Motion.div key="test6">
 						<TestButton />
 					</Motion.div>
 				</Presence>
