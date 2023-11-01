@@ -58,8 +58,7 @@ export interface AnimateChangeOptions {
 }
 
 export interface AnimateEventOptions {
-	initial?: boolean | KeyframesDefinition;
-	animate?: KeyframesDefinition;
+	initial?: KeyframesDefinition;
 	event?: KeyframesDefinition;
 	defaultTransition?: AnimationOptionsWithOverrides;
 	reverse?: boolean;

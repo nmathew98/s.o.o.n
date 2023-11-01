@@ -1,7 +1,7 @@
 import type { PolymorphicMotionHandles, PolymorphicMotionProps } from "./types";
 import type { AnimationControls } from "motion";
 import React from "react";
-import { animateChange, animateEvent, animateInitial } from "./utils";
+import { animateChange, animateEvent, animateInitial, isRecord } from "./utils";
 
 export const PolymorphicMotion = React.forwardRef(
 	<T extends keyof React.JSX.IntrinsicElements>(
@@ -92,8 +92,7 @@ export const PolymorphicMotion = React.forwardRef(
 				await pendingAnimation?.current;
 
 				const controls = animateEvent({
-					initial,
-					animate,
+					initial: animate ?? (isRecord(initial) ? initial : undefined),
 					event: exit,
 					defaultTransition: transition,
 				})(componentRef.current);
@@ -110,8 +109,7 @@ export const PolymorphicMotion = React.forwardRef(
 			await pendingAnimation?.current;
 
 			const controls = animateEvent({
-				initial,
-				animate,
+				initial: animate ?? (isRecord(initial) ? initial : undefined),
 				event: hover,
 				defaultTransition: transition,
 			})(componentRef.current);
@@ -127,8 +125,7 @@ export const PolymorphicMotion = React.forwardRef(
 			await pendingAnimation?.current;
 
 			const controls = animateEvent({
-				initial,
-				animate,
+				initial: animate ?? (isRecord(initial) ? initial : undefined),
 				event: hover,
 				defaultTransition: transition,
 				reverse: true,
@@ -145,8 +142,7 @@ export const PolymorphicMotion = React.forwardRef(
 			await pendingAnimation?.current;
 
 			const controls = animateEvent({
-				initial,
-				animate,
+				initial: hover,
 				event: press,
 				defaultTransition: transition,
 			})(componentRef.current);
@@ -156,25 +152,7 @@ export const PolymorphicMotion = React.forwardRef(
 			emitMotionEvents(controls);
 
 			return controls?.finished;
-		}, [initial, animate, press, transition, emitMotionEvents]);
-
-		const onMouseUpAnimation = React.useCallback(async () => {
-			await pendingAnimation?.current;
-
-			const controls = animateEvent({
-				initial,
-				animate,
-				event: press,
-				defaultTransition: transition,
-				reverse: true,
-			})(componentRef.current);
-
-			pendingAnimation.current = controls?.finished;
-
-			emitMotionEvents(controls);
-
-			return controls?.finished;
-		}, [initial, animate, press, transition, emitMotionEvents]);
+		}, [hover, press, transition, emitMotionEvents]);
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		const combinedOnMouseOver = React.useCallback(
@@ -191,11 +169,6 @@ export const PolymorphicMotion = React.forwardRef(
 			invoke(onMouseDown, onMouseDownAnimation),
 			[onMouseDown, onMouseDownAnimation],
 		);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		const combinedOnMouseUp = React.useCallback(
-			invoke(onMouseUp, onMouseUpAnimation),
-			[onMouseUp, onMouseUpAnimation],
-		);
 
 		React.useImperativeHandle(ref, createHandles);
 
@@ -208,7 +181,6 @@ export const PolymorphicMotion = React.forwardRef(
 				onMouseOver={combinedOnMouseOver}
 				onMouseLeave={combinedOnMouseLeave}
 				onMouseDown={combinedOnMouseDown}
-				onMouseUp={combinedOnMouseUp}
 			/>
 		);
 	},

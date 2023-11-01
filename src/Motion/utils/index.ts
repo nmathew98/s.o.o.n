@@ -94,22 +94,13 @@ export const animateChange =
 	};
 
 export const animateEvent =
-	({
-		initial: initialKeyframesDefinition,
-		animate: animateKeyframesDefinition,
-		event,
-		defaultTransition,
-		reverse,
-	}: AnimateEventOptions) =>
+	({ initial, event, defaultTransition, reverse }: AnimateEventOptions) =>
 	(instance: null | HTMLElement) => {
 		if (!instance || !event) {
 			return;
 		}
 
-		const from = isRecord(initialKeyframesDefinition)
-			? initialKeyframesDefinition
-			: animateKeyframesDefinition;
-		const keyframes = reverse ? merge(event, from) : merge(from, event);
+		const keyframes = reverse ? merge(event, initial) : merge(initial, event);
 
 		const controls = animate(
 			instance,
