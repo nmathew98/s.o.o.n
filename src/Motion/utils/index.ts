@@ -157,3 +157,8 @@ export const merge = <T extends Record<string, any>>(a?: T, b?: T): T => {
 
 export const isRecord = (x: unknown): x is KeyframesDefinition =>
 	typeof x === "object";
+
+export const invoke =
+	(...handlers: (((...args: any[]) => any) | undefined)[]) =>
+	(...args: any[]) =>
+		handlers.forEach(handler => handler?.(...args));

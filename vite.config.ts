@@ -8,7 +8,7 @@ export default defineConfig({
 	plugins: [react(), dts({ rollupTypes: true })],
 	build: {
 		lib: {
-			entry: resolve(__dirname, "src/index.ts"),
+			entry: resolve(__dirname, "src/index.tsx"),
 			name: "Soon",
 			formats: ["es"],
 			fileName: format => `s.o.o.n.${format}.js`,

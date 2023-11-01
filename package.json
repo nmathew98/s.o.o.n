@@ -1,7 +1,7 @@
 {
 	"name": "@b.s/s.o.o.n",
 	"private": true,
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"type": "module",
 	"files": [
 		"dist"
@@ -16,7 +16,7 @@
 	},
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build",
+		"build": "pnpm test && tsc && vite build",
 		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 		"preview": "vite preview",
 		"format": "prettier .  --write",
