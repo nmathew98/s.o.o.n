@@ -15,19 +15,10 @@ export const calculateKeyframesFromAToB = (
 	a?: KeyframesDefinition,
 	b?: KeyframesDefinition,
 	defaultTransition?: AnimationOptionsWithOverrides,
-) => {
-	if (!a || !b) {
-		return {
-			...merge(a, b),
-			transition: b?.transition ?? defaultTransition,
-		};
-	}
-
-	return {
-		...merge(a, b),
-		transition: b.transition ?? defaultTransition,
-	};
-};
+) => ({
+	...merge(a, b),
+	transition: b?.transition ?? defaultTransition,
+});
 
 export const animateInitial =
 	({
@@ -82,13 +73,13 @@ export const animateChange =
 			return;
 		}
 
-		const keyframes = merge(initial, final);
-
-		const controls = animate(
-			instance,
-			keyframes,
-			keyframes?.transition ?? defaultTransition,
+		const keyframes = calculateKeyframesFromAToB(
+			initial,
+			final,
+			defaultTransition,
 		);
+
+		const controls = animate(instance, keyframes, keyframes?.transition);
 
 		return controls;
 	};
@@ -100,7 +91,9 @@ export const animateEvent =
 			return;
 		}
 
-		const keyframes = reverse ? merge(event, initial) : merge(initial, event);
+		const keyframes = reverse
+			? calculateKeyframesFromAToB(event, initial, defaultTransition)
+			: calculateKeyframesFromAToB(initial, event, defaultTransition);
 
 		const controls = animate(
 			instance,
