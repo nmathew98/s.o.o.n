@@ -4,7 +4,11 @@ import type {
 	InViewOptions,
 	ScrollOptions,
 } from "motion";
-import type { AnimateInitialOptions, KeyframesDefinition } from "../types";
+import type {
+	AnimateInitialOptions,
+	AnimateChangeOptions,
+	KeyframesDefinition,
+} from "../types";
 
 export const calculateKeyframesFromAToB = (
 	a?: KeyframesDefinition,
@@ -61,6 +65,29 @@ export const animateInitial =
 		} else if (withInView) {
 			inView(instance, controls.stop, inViewOptions as InViewOptions);
 		}
+
+		return controls;
+	};
+
+export const animateChange =
+	({
+		isInitialRender,
+		initial,
+		final,
+		defaultTransition,
+	}: AnimateChangeOptions) =>
+	(instance: HTMLElement | null) => {
+		if (!instance || isInitialRender) {
+			return;
+		}
+
+		const keyframes = merge(initial, final);
+
+		const controls = animate(
+			instance,
+			keyframes,
+			keyframes?.transition ?? defaultTransition,
+		);
 
 		return controls;
 	};

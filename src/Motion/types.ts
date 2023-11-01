@@ -53,3 +53,10 @@ export interface AnimateInitialOptions {
 	scrollOptions?: boolean | ScrollOptions;
 	inViewOptions?: boolean | InViewOptions;
 }
+
+export interface AnimateChangeOptions {
+	initial?: KeyframesDefinition;
+	final?: KeyframesDefinition;
+	defaultTransition?: AnimationOptionsWithOverrides;
+	isInitialRender?: boolean;
+}
