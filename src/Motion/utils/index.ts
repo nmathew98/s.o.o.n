@@ -43,7 +43,7 @@ export const animateInitial =
 			!instance ||
 			!isInitialRender ||
 			!initialKeyframesDefinition ||
-			!(initialKeyframesDefinition && animateKeyframesDefinition) ||
+			(!initialKeyframesDefinition && !animateKeyframesDefinition) ||
 			(scrollOptions && inViewOptions)
 		) {
 			return;
@@ -52,12 +52,12 @@ export const animateInitial =
 		const keyframes = !isRecord(initialKeyframesDefinition)
 			? animateKeyframesDefinition
 			: initialKeyframesDefinition;
-		const withScroll = isRecord(scroll);
+		const withScroll = isRecord(scrollOptions);
 		const withInView = isRecord(inViewOptions);
 
 		const controls = animate(
 			instance,
-			keyframes,
+			keyframes as KeyframesDefinition,
 			keyframes?.transition ?? defaultTransition,
 		);
 

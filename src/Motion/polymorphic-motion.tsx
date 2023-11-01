@@ -35,7 +35,7 @@ export const PolymorphicMotion = React.forwardRef(
 		const isInitialRender = React.useRef(true);
 		const pendingAnimation = React.useRef<Promise<unknown>>();
 
-		useLayoutEffect(() => {
+		React.useEffect(() => {
 			isInitialRender.current = false;
 			lastAnimate.current = animate;
 		});
