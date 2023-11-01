@@ -8,6 +8,7 @@ import type {
 	AnimateInitialOptions,
 	AnimateChangeOptions,
 	KeyframesDefinition,
+	AnimateEventOptions,
 } from "../types";
 
 export const calculateKeyframesFromAToB = (
@@ -87,6 +88,33 @@ export const animateChange =
 			instance,
 			keyframes,
 			keyframes?.transition ?? defaultTransition,
+		);
+
+		return controls;
+	};
+
+export const animateEvent =
+	({
+		initial: initialKeyframesDefinition,
+		animate: animateKeyframesDefinition,
+		event,
+		defaultTransition,
+		reverse,
+	}: AnimateEventOptions) =>
+	(instance: null | HTMLElement) => {
+		if (!instance || !event) {
+			return;
+		}
+
+		const from = isRecord(initialKeyframesDefinition)
+			? initialKeyframesDefinition
+			: animateKeyframesDefinition;
+		const keyframes = reverse ? merge(event, from) : merge(from, event);
+
+		const controls = animate(
+			instance,
+			keyframes,
+			event.transition ?? defaultTransition,
 		);
 
 		return controls;

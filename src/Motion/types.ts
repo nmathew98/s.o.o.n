@@ -60,3 +60,11 @@ export interface AnimateChangeOptions {
 	defaultTransition?: AnimationOptionsWithOverrides;
 	isInitialRender?: boolean;
 }
+
+export interface AnimateEventOptions {
+	initial?: KeyframesDefinition;
+	animate?: KeyframesDefinition;
+	event?: KeyframesDefinition;
+	defaultTransition?: AnimationOptionsWithOverrides;
+	reverse?: boolean;
+}
