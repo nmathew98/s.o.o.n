@@ -19,7 +19,6 @@ export const PolymorphicMotion = React.forwardRef(
 			onMouseDown,
 			onMouseLeave,
 			onMouseOver,
-			onClick,
 			onMotionStart,
 			onMotionEnd,
 			...rest
@@ -154,6 +153,23 @@ export const PolymorphicMotion = React.forwardRef(
 			return controls?.finished;
 		}, [hover, press, transition, emitMotionEvents]);
 
+		const onMouseUpAnimation = React.useCallback(async () => {
+			await pendingAnimation?.current;
+
+			const controls = animateEvent({
+				initial: press,
+				event: hover,
+				defaultTransition: transition,
+				reverse: true,
+			})(componentRef.current);
+
+			pendingAnimation.current = controls?.finished;
+
+			emitMotionEvents(controls);
+
+			return controls?.finished;
+		}, [press, hover, transition, emitMotionEvents]);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		const combinedOnMouseOver = React.useCallback(
 			invoke(onMouseOver, onMouseOverAnimation),
@@ -169,6 +185,11 @@ export const PolymorphicMotion = React.forwardRef(
 			invoke(onMouseDown, onMouseDownAnimation),
 			[onMouseDown, onMouseDownAnimation],
 		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		const combinedOnMouseUp = React.useCallback(
+			invoke(onMouseUp, onMouseUpAnimation),
+			[onMouseUp, onMouseUpAnimation],
+		);
 
 		React.useImperativeHandle(ref, createHandles);
 
@@ -181,6 +202,7 @@ export const PolymorphicMotion = React.forwardRef(
 				onMouseOver={combinedOnMouseOver}
 				onMouseLeave={combinedOnMouseLeave}
 				onMouseDown={combinedOnMouseDown}
+				onMouseUp={combinedOnMouseUp}
 			/>
 		);
 	},
