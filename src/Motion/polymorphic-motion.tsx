@@ -1,7 +1,13 @@
 import type { PolymorphicMotionHandles, PolymorphicMotionProps } from "./types";
 import type { AnimationControls } from "motion";
 import React from "react";
-import { animateChange, animateEvent, animateInitial, isRecord } from "./utils";
+import {
+	animateChange,
+	animateEvent,
+	animateInitial,
+	invoke,
+	isRecord,
+} from "./utils";
 
 export const PolymorphicMotion = React.forwardRef(
 	<T extends keyof React.JSX.IntrinsicElements>(
@@ -207,8 +213,3 @@ export const PolymorphicMotion = React.forwardRef(
 		);
 	},
 );
-
-const invoke =
-	(...handlers: (((...args: any[]) => any) | undefined)[]) =>
-	(...args: any[]) =>
-		handlers.forEach(handler => handler?.(...args));
