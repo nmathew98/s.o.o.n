@@ -1,44 +1,53 @@
 {
-  "name": "@b.s/s.o.o.n",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "files": [
-    "dist"
-  ],
-  "main": "./dist/s.o.o.n.es.js",
-  "module": "./dist/s.o.o.n.es.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/s.o.o.n.es.js"
-    }
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "motion": "^10.16.4"
-  },
-  "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.8.9",
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "@vitejs/plugin-react-swc": "^3.3.2",
-    "eslint": "^8.45.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5",
-    "vite-plugin-dts": "^3.6.1"
-  }
+	"name": "@b.s/s.o.o.n",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"files": [
+		"dist"
+	],
+	"main": "./dist/s.o.o.n.es.js",
+	"module": "./dist/s.o.o.n.es.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/s.o.o.n.es.js"
+		}
+	},
+	"scripts": {
+		"dev": "vite",
+		"build": "pnpm test && tsc && vite build",
+		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+		"preview": "vite preview",
+		"format": "prettier .  --write",
+		"test": "node --loader tsx --test src/**/**/test.ts",
+		"test.watch": "node --loader tsx --watch --test src/**/**/test.ts"
+	},
+	"dependencies": {
+		"motion": "^10.16.4",
+		"react-is": "^18.2.0"
+	},
+	"peerDependencies": {
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.8.9",
+		"@types/react": "^18.2.15",
+		"@types/react-dom": "^18.2.7",
+		"@types/react-is": "^18.2.3",
+		"@typescript-eslint/eslint-plugin": "^6.0.0",
+		"@typescript-eslint/parser": "^6.0.0",
+		"@vitejs/plugin-react-swc": "^3.3.2",
+		"eslint": "^8.45.0",
+		"eslint-config-prettier": "^9.0.0",
+		"eslint-plugin-prettier": "^5.0.1",
+		"eslint-plugin-react-hooks": "^4.6.0",
+		"eslint-plugin-react-refresh": "^0.4.3",
+		"prettier": "^3.0.3",
+		"tsx": "^3.14.0",
+		"typescript": "^5.0.2",
+		"vite": "^4.4.5",
+		"vite-plugin-dts": "^3.6.1"
+	}
 }
