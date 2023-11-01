@@ -33,14 +33,39 @@ export const PolymorphicMotion = React.forwardRef(
 	) => {
 		const componentRef = React.useRef<null | HTMLElement>(null);
 
-		const lastAnimate = React.useRef(animate);
 		const isInitialRender = React.useRef(true);
+
+		const previousAnimate = React.useRef(animate);
 		const pendingAnimation = React.useRef<Promise<unknown>>();
 
 		React.useEffect(() => {
 			isInitialRender.current = false;
-			lastAnimate.current = animate;
+			previousAnimate.current = animate;
 		});
+
+		const createHandles = (): PolymorphicMotionHandles => ({
+			animateExit: async () => {
+				if (!componentRef.current) {
+					return;
+				}
+
+				await pendingAnimation?.current;
+
+				const controls = animateEvent({
+					initial: animate ?? (isRecord(initial) ? initial : undefined),
+					event: exit,
+					defaultTransition: transition,
+				})(componentRef.current);
+
+				pendingAnimation.current = controls?.finished;
+
+				emitMotionEvents(controls);
+
+				return controls?.finished;
+			},
+		});
+
+		React.useImperativeHandle(ref, createHandles);
 
 		const emitMotionEvents = React.useCallback(
 			(controls?: AnimationControls) => {
@@ -75,7 +100,7 @@ export const PolymorphicMotion = React.forwardRef(
 
 				const changeControls = animateChange({
 					isInitialRender: isInitialRender.current,
-					initial: lastAnimate.current,
+					initial: previousAnimate.current,
 					final: animate,
 				})(instance);
 
@@ -87,28 +112,6 @@ export const PolymorphicMotion = React.forwardRef(
 			},
 			[initial, animate, transition, scroll, inView, emitMotionEvents],
 		);
-
-		const createHandles = (): PolymorphicMotionHandles => ({
-			animateExit: async () => {
-				if (!componentRef.current) {
-					return;
-				}
-
-				await pendingAnimation?.current;
-
-				const controls = animateEvent({
-					initial: animate ?? (isRecord(initial) ? initial : undefined),
-					event: exit,
-					defaultTransition: transition,
-				})(componentRef.current);
-
-				pendingAnimation.current = controls?.finished;
-
-				emitMotionEvents(controls);
-
-				return controls?.finished;
-			},
-		});
 
 		const onMouseOverAnimation = React.useCallback(async () => {
 			await pendingAnimation?.current;
@@ -196,8 +199,6 @@ export const PolymorphicMotion = React.forwardRef(
 			invoke(onMouseUp, onMouseUpAnimation),
 			[onMouseUp, onMouseUpAnimation],
 		);
-
-		React.useImperativeHandle(ref, createHandles);
 
 		const Component = as as React.ElementType;
 
