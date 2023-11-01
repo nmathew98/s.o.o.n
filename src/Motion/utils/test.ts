@@ -1,7 +1,7 @@
+import type { KeyframesDefinition } from "../types";
 import { describe, it } from "node:test";
 import { merge } from ".";
 import { deepEqual, strictEqual } from "node:assert";
-import type { KeyframesDefinition } from "../types";
 
 describe("merge", () => {
 	describe("should handle either parameters being undefined", () => {

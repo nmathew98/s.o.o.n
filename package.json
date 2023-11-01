@@ -1,6 +1,6 @@
 {
 	"name": "@b.s/s.o.o.n",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"type": "module",
 	"files": [
 		"dist"
@@ -8,6 +8,7 @@
 	"main": "./dist/s.o.o.n.es.js",
 	"module": "./dist/s.o.o.n.es.js",
 	"types": "./dist/index.d.ts",
+	"license": "MIT",
 	"exports": {
 		".": {
 			"import": "./dist/s.o.o.n.es.js"
