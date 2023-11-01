@@ -1,5 +1,10 @@
-import type { AnimationOptionsWithOverrides } from "motion";
-import type { KeyframesDefinition } from "../types";
+import { animate, inView, scroll } from "motion";
+import type {
+	AnimationOptionsWithOverrides,
+	InViewOptions,
+	ScrollOptions,
+} from "motion";
+import type { AnimateInitialOptions, KeyframesDefinition } from "../types";
 
 export const calculateKeyframesFromAToB = (
 	a?: KeyframesDefinition,
@@ -18,6 +23,47 @@ export const calculateKeyframesFromAToB = (
 		transition: b.transition ?? defaultTransition,
 	};
 };
+
+export const animateInitial =
+	({
+		isInitialRender,
+		initial: initialKeyframesDefinition,
+		animate: animateKeyframesDefinition,
+		defaultTransition,
+		scrollOptions,
+		inViewOptions,
+	}: AnimateInitialOptions) =>
+	(instance: HTMLElement | null) => {
+		if (
+			!instance ||
+			!isInitialRender ||
+			!initialKeyframesDefinition ||
+			!(initialKeyframesDefinition && animateKeyframesDefinition) ||
+			(scrollOptions && inViewOptions)
+		) {
+			return;
+		}
+
+		const keyframes = !isRecord(initialKeyframesDefinition)
+			? animateKeyframesDefinition
+			: initialKeyframesDefinition;
+		const withScroll = isRecord(scroll);
+		const withInView = isRecord(inViewOptions);
+
+		const controls = animate(
+			instance,
+			keyframes,
+			keyframes?.transition ?? defaultTransition,
+		);
+
+		if (withScroll) {
+			scroll(controls, scrollOptions as ScrollOptions);
+		} else if (withInView) {
+			inView(instance, controls.stop, inViewOptions as InViewOptions);
+		}
+
+		return controls;
+	};
 
 export const merge = <T extends Record<string, any>>(a?: T, b?: T): T => {
 	if (!a || !b) {
@@ -62,3 +108,6 @@ export const merge = <T extends Record<string, any>>(a?: T, b?: T): T => {
 		...entriesInInitialNotInFinal,
 	};
 };
+
+export const isRecord = (x: unknown): x is KeyframesDefinition =>
+	typeof x === "object";

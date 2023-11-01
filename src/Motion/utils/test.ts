@@ -110,6 +110,6 @@ describe("merge", () => {
 
 		const result = merge(a, b);
 
-		deepEqual(result.x, 0);
+		strictEqual(result.x, 0);
 	});
 });

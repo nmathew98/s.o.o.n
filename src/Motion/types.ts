@@ -44,3 +44,12 @@ export type KeyframesDefinition = MotionKeyframesDefinition & {
 export interface PolymorphicMotionHandles {
 	animateExit: () => Promise<void>;
 }
+
+export interface AnimateInitialOptions {
+	initial?: boolean | KeyframesDefinition;
+	animate?: KeyframesDefinition;
+	defaultTransition?: AnimationOptionsWithOverrides;
+	isInitialRender?: boolean;
+	scrollOptions?: boolean | ScrollOptions;
+	inViewOptions?: boolean | InViewOptions;
+}
