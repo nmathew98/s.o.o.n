@@ -1,46 +1,7 @@
-import type {
-	AnimationControls,
-	CSSStyleDeclarationWithTransform,
-} from "motion";
-import type {
-	KeyframesDefinition,
-	MotionProps,
-	PolymorphicMotionHandles,
-	PolymorphicMotionProps,
-} from "./types";
+import type { PolymorphicMotionHandles, PolymorphicMotionProps } from "./types";
+import type { AnimationControls } from "motion";
 import React from "react";
-import {
-	animate as motionAnimate,
-	inView as motionInView,
-	scroll as motionScroll,
-} from "motion";
-import { usePreviousValueEffect } from "./use-previous-value-effect";
-import { MomentSymbol, bsKey } from "../utils/constants";
-
-const memo = new Map();
-
-export const PolymorphicMotionFactory = <
-	T extends keyof React.JSX.IntrinsicElements,
->({
-	as,
-}: MotionProps<T>) => {
-	if (memo.has(as)) {
-		return memo.get(as);
-	}
-
-	const result = React.forwardRef(
-		(
-			props: Omit<PolymorphicMotionProps<T>, "as">,
-			ref: React.ForwardedRef<PolymorphicMotionHandles>,
-		) => <PolymorphicMotion as={as} {...props} ref={ref} />,
-	);
-
-	(result as any)[bsKey] = MomentSymbol;
-
-	memo.set(as, result);
-
-	return result;
-};
+import { animateChange, animateEvent, animateInitial, isRecord } from "./utils";
 
 export const PolymorphicMotion = React.forwardRef(
 	<T extends keyof React.JSX.IntrinsicElements>(
@@ -58,263 +19,187 @@ export const PolymorphicMotion = React.forwardRef(
 			onMouseDown,
 			onMouseLeave,
 			onMouseOver,
-			onClick,
 			onMotionStart,
 			onMotionEnd,
-			onHoverStart,
-			onHoverEnd,
-			onPressStart,
-			onPressEnd,
 			...rest
 		}: PolymorphicMotionProps<T>,
 		ref: React.ForwardedRef<PolymorphicMotionHandles>,
 	) => {
-		const pendingAnimation = React.useRef<null | Promise<unknown>>(null);
 		const componentRef = React.useRef<null | HTMLElement>(null);
-		const isInitialRender = React.useRef(true);
 
-		const setPendingAnimation = React.useCallback(
-			(controls: AnimationControls) => {
-				pendingAnimation.current = controls.finished.then(() => {
-					pendingAnimation.current = null;
-				});
-			},
-			[],
-		);
+		const lastAnimate = React.useRef(animate);
+		const isInitialRender = React.useRef(true);
+		const pendingAnimation = React.useRef<Promise<unknown>>();
+
+		React.useEffect(() => {
+			isInitialRender.current = false;
+			lastAnimate.current = animate;
+		});
 
 		const emitMotionEvents = React.useCallback(
-			(controls: AnimationControls) => {
+			(controls?: AnimationControls) => {
+				if (!controls) {
+					return;
+				}
+
 				onMotionStart?.(controls);
 				controls.finished.then(() => onMotionEnd?.(controls));
 			},
 			[onMotionStart, onMotionEnd],
 		);
 
-		const onMouseOverWithAnimation: React.MouseEventHandler<T> =
-			React.useCallback(
-				async event => {
-					onMouseOver?.(event);
-					onHoverStart?.(event);
-
-					if (!componentRef.current || !hover) {
-						return;
-					}
-
-					const { transition: hoverAnimationsTransitions, ...rest } = hover;
-
-					await pendingAnimation.current;
-					const hoverAnimationsControls = motionAnimate(
-						componentRef.current,
-						rest,
-						hoverAnimationsTransitions ?? transition,
-					);
-
-					emitMotionEvents(hoverAnimationsControls);
-					setPendingAnimation(hoverAnimationsControls);
-				},
-				[
-					onMouseOver,
-					hover,
-					transition,
-					emitMotionEvents,
-					onHoverStart,
-					setPendingAnimation,
-				],
-			);
-
-		const onClickWithAnimation: React.MouseEventHandler<T> = React.useCallback(
-			async event => {
-				onClick?.(event);
-
-				if (!componentRef.current || !press) {
+		const setRef = React.useCallback(
+			async (instance: HTMLElement | null) => {
+				if (!instance) {
 					return;
 				}
 
-				const { transition: pressAnimationsTransitions, ...rest } = press;
+				componentRef.current = instance;
 
-				await pendingAnimation.current;
-				const pressAnimationsControls = motionAnimate(
-					componentRef.current,
-					rest,
-					pressAnimationsTransitions ?? transition,
-				);
+				await pendingAnimation?.current;
 
-				emitMotionEvents(pressAnimationsControls);
-				setPendingAnimation(pressAnimationsControls);
+				const initialControls = animateInitial({
+					isInitialRender: isInitialRender.current,
+					initial,
+					animate,
+					defaultTransition: transition,
+					scrollOptions: scroll,
+					inViewOptions: inView,
+				})(instance);
+
+				const changeControls = animateChange({
+					isInitialRender: isInitialRender.current,
+					initial: lastAnimate.current,
+					final: animate,
+				})(instance);
+
+				const controls = initialControls || changeControls;
+
+				pendingAnimation.current = controls?.finished;
+
+				emitMotionEvents(controls);
 			},
-			[onClick, press, transition, emitMotionEvents, setPendingAnimation],
-		);
-
-		const combinedOnMouseLeave: React.MouseEventHandler<T> = React.useCallback(
-			event => [onMouseLeave, onHoverEnd].forEach(handler => handler?.(event)),
-			[onMouseLeave, onHoverEnd],
-		);
-
-		const combinedOnMouseDown: React.MouseEventHandler<T> = React.useCallback(
-			event => [onMouseDown, onPressStart].forEach(handler => handler?.(event)),
-			[onMouseDown, onPressStart],
-		);
-
-		const combinedOnMouseUp: React.MouseEventHandler<T> = React.useCallback(
-			event => [onMouseUp, onPressEnd].forEach(handler => handler?.(event)),
-			[onMouseUp, onPressEnd],
+			[initial, animate, transition, scroll, inView, emitMotionEvents],
 		);
 
 		const createHandles = (): PolymorphicMotionHandles => ({
 			animateExit: async () => {
-				if (!componentRef.current || !exit) {
+				if (!componentRef.current) {
 					return;
 				}
 
-				const { transition: exitTransition, ...rest } = exit;
+				await pendingAnimation?.current;
 
-				await pendingAnimation.current;
-				const controls = motionAnimate(
-					componentRef.current,
-					rest,
-					exitTransition ?? transition,
-				);
+				const controls = animateEvent({
+					initial: animate ?? (isRecord(initial) ? initial : undefined),
+					event: exit,
+					defaultTransition: transition,
+				})(componentRef.current);
 
-				setPendingAnimation(controls);
+				pendingAnimation.current = controls?.finished;
 
-				controls.finished;
+				emitMotionEvents(controls);
 
-				await controls.finished;
+				return controls?.finished;
 			},
 		});
 
-		React.useImperativeHandle(ref, createHandles, [
-			exit,
-			transition,
-			setPendingAnimation,
-		]);
+		const onMouseOverAnimation = React.useCallback(async () => {
+			await pendingAnimation?.current;
 
-		React.useLayoutEffect(() => {
-			if (
-				!isInitialRender.current ||
-				!componentRef.current ||
-				!initial ||
-				(initial === true && !animate)
-			) {
-				return;
-			}
+			const controls = animateEvent({
+				initial: animate ?? (isRecord(initial) ? initial : undefined),
+				event: hover,
+				defaultTransition: transition,
+			})(componentRef.current);
 
-			const { transition: initialTransition, ...rest } =
-				initial === true ? (animate as KeyframesDefinition) : initial;
+			pendingAnimation.current = controls?.finished;
 
-			const runAnimation = async () => {
-				await pendingAnimation.current;
+			emitMotionEvents(controls);
 
-				const animate = () => {
-					if (!componentRef.current) {
-						return;
-					}
+			return controls?.finished;
+		}, [initial, animate, hover, transition, emitMotionEvents]);
 
-					const controls = motionAnimate(
-						componentRef.current as HTMLElement,
-						rest,
-						initialTransition ?? transition,
-					);
+		const onMouseLeaveAnimation = React.useCallback(async () => {
+			await pendingAnimation?.current;
 
-					setPendingAnimation(controls);
+			const controls = animateEvent({
+				initial: animate ?? (isRecord(initial) ? initial : undefined),
+				event: hover,
+				defaultTransition: transition,
+				reverse: true,
+			})(componentRef.current);
 
-					return controls;
-				};
+			pendingAnimation.current = controls?.finished;
 
-				if (scroll) {
-					const scrollOptions =
-						typeof scroll === "boolean" ? undefined : scroll;
+			emitMotionEvents(controls);
 
-					const controls = animate();
+			return controls?.finished;
+		}, [initial, animate, hover, transition, emitMotionEvents]);
 
-					if (!controls) {
-						return;
-					}
+		const onMouseDownAnimation = React.useCallback(async () => {
+			await pendingAnimation?.current;
 
-					return void motionScroll(controls, scrollOptions);
-				}
+			const controls = animateEvent({
+				initial: hover,
+				event: press,
+				defaultTransition: transition,
+			})(componentRef.current);
 
-				if (inView) {
-					const inViewOptions =
-						typeof inView === "boolean" ? undefined : inView;
+			pendingAnimation.current = controls?.finished;
 
-					const controls = animate();
+			emitMotionEvents(controls);
 
-					if (!controls) {
-						return;
-					}
+			return controls?.finished;
+		}, [hover, press, transition, emitMotionEvents]);
 
-					return void motionInView(
-						componentRef.current as HTMLElement,
-						() => controls.stop,
-						inViewOptions,
-					);
-				}
+		const onMouseUpAnimation = React.useCallback(async () => {
+			await pendingAnimation?.current;
 
-				return void animate();
-			};
+			const controls = animateEvent({
+				initial: press,
+				event: hover,
+				defaultTransition: transition,
+				reverse: true,
+			})(componentRef.current);
 
-			runAnimation();
-		}, [initial, animate, transition, scroll, inView, setPendingAnimation]);
+			pendingAnimation.current = controls?.finished;
 
-		const onChangeAnimate = React.useCallback(
-			(from?: React.DependencyList, to?: React.DependencyList) => {
-				if (isInitialRender.current) {
-					return void (isInitialRender.current = false);
-				}
+			emitMotionEvents(controls);
 
-				if (
-					componentRef.current &&
-					from?.every(Boolean) &&
-					to?.every(Boolean)
-				) {
-					const [animateFrom] = from as [KeyframesDefinition];
-					const [animateTo] = to as [KeyframesDefinition];
+			return controls?.finished;
+		}, [press, hover, transition, emitMotionEvents]);
 
-					const { transition: animateFromTransition, ...rest } = animateFrom;
-					const animateFromEntries = Object.entries(rest);
-					const newEntriesFromFinal = Object.entries(animateTo).filter(
-						([k]) =>
-							k !== "transition" &&
-							animateFromEntries.every(([fromK]) => fromK !== k),
-					);
-
-					const merged = [...animateFromEntries, ...newEntriesFromFinal].map(
-						([key, initialValue]) => {
-							const finalValue =
-								animateTo[key as keyof CSSStyleDeclarationWithTransform];
-
-							return [key, [initialValue, finalValue]];
-						},
-					);
-
-					const runAnimation = async () => {
-						await pendingAnimation.current;
-						const controls = motionAnimate(
-							componentRef.current as HTMLElement,
-							Object.fromEntries(merged),
-							animateFromTransition ?? transition,
-						);
-
-						setPendingAnimation(controls);
-					};
-
-					runAnimation();
-				}
-			},
-			[setPendingAnimation, transition],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		const combinedOnMouseOver = React.useCallback(
+			invoke(onMouseOver, onMouseOverAnimation),
+			[onMouseOver, onMouseOverAnimation],
+		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		const combinedOnMouseLeave = React.useCallback(
+			invoke(onMouseLeave, onMouseLeaveAnimation),
+			[onMouseLeave, onMouseLeaveAnimation],
+		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		const combinedOnMouseDown = React.useCallback(
+			invoke(onMouseDown, onMouseDownAnimation),
+			[onMouseDown, onMouseDownAnimation],
+		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		const combinedOnMouseUp = React.useCallback(
+			invoke(onMouseUp, onMouseUpAnimation),
+			[onMouseUp, onMouseUpAnimation],
 		);
 
-		usePreviousValueEffect(onChangeAnimate, [animate]);
+		React.useImperativeHandle(ref, createHandles);
 
 		const Component = as as React.ElementType;
 
 		return (
 			<Component
 				{...rest}
-				ref={componentRef}
-				onMouseOver={onMouseOverWithAnimation}
-				onClick={onClickWithAnimation}
+				ref={setRef}
+				onMouseOver={combinedOnMouseOver}
 				onMouseLeave={combinedOnMouseLeave}
 				onMouseDown={combinedOnMouseDown}
 				onMouseUp={combinedOnMouseUp}
@@ -322,3 +207,8 @@ export const PolymorphicMotion = React.forwardRef(
 		);
 	},
 );
+
+const invoke =
+	(...handlers: (((...args: any[]) => any) | undefined)[]) =>
+	(...args: any[]) =>
+		handlers.forEach(handler => handler?.(...args));

@@ -32,6 +32,9 @@ function App() {
 					<Motion.button
 						key="test1"
 						initial={{ opacity: 0.1 }}
+						animate={{ opacity: 0.5 }}
+						hover={{ opacity: 0.7 }}
+						press={{ opacity: 1 }}
 						onClick={() => setCount(count => count + 1)}>
 						count is {count}
 					</Motion.button>
