@@ -20,7 +20,7 @@ Wrap a component in `Motion` to enable animations on them
 
 - `animate`
   - A target of values to animate to
-  - On initial render, `animate` does not run
+  - On initial render, `animate` does not run if `initial` is `false` or if options are not provided
   - On subsequent renders, `animate` runs if its options changes
 - `initial`
   - If options are provided, a target of values to animate to when the element is first rendered
@@ -29,11 +29,14 @@ Wrap a component in `Motion` to enable animations on them
   - A target of values to animate to when an element is hidden
   - The element must be a direct child of `Presence`
 - `hover`
-  - A target of values to animate from when the element receives a hover event
+  - A target of values to animate to from `animate` when the element receives a hover event
+  - When the element is not hovered anymore, it animates to `animate`
 - `press`
-  - A target of values to animate to from when the element receives a press event
+  - A target of values to animate to from `animate` when the element receives a click event
+  - When the element is not pressed anymore, it animates to `animate`
 - `transition`
   - Default transitions for all animations to use
+  - Animations can specify their own `transition` to override the defaults
 - `inView`
   - If `true` uses default `inView` options from `motion`, otherwise specify options
   - Only triggers for initial animations
@@ -60,10 +63,8 @@ or
 ```JSX
 <PresenceProvider>
   <Parent>
-    <ChildA>
-      <Presence>{children}</Presence>
-      <Presence>{children}</Presence>
-    </ChildA>
+    <Presence>{children}</Presence>
+    <Presence>{children}</Presence>
   <Parent>
 <PresenceProvider>
 ```
