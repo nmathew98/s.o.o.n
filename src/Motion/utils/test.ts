@@ -24,7 +24,7 @@ describe("merge", () => {
 		it("if `initial` and `final` are undefined, it should return an empty object", () => {
 			const result = merge();
 
-			strictEqual(Object.keys(result).length, 0);
+			deepEqual(result, Object.create(null));
 		});
 	});
 
@@ -96,7 +96,7 @@ describe("merge", () => {
 
 		const result = merge(a, b);
 
-		deepEqual(result.x, 0);
+		strictEqual(result.x, 0);
 	});
 
 	it("should preserve keys which exist in `initial` but not `final`", () => {
