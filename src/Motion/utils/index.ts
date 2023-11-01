@@ -1,4 +1,3 @@
-import { animate, inView, scroll } from "motion";
 import type {
 	AnimationOptionsWithOverrides,
 	InViewOptions,
@@ -10,6 +9,7 @@ import type {
 	KeyframesDefinition,
 	AnimateEventOptions,
 } from "../types";
+import { animate, inView, scroll } from "motion";
 
 export const calculateKeyframesFromAToB = (
 	a?: KeyframesDefinition,
