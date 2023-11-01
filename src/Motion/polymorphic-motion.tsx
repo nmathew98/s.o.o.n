@@ -1,5 +1,5 @@
 import type { PolymorphicMotionHandles, PolymorphicMotionProps } from "./types";
-import React, { useLayoutEffect } from "react";
+import React from "react";
 import { animateChange, animateEvent, animateInitial } from "./utils";
 
 export const PolymorphicMotion = React.forwardRef(
