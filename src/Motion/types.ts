@@ -31,10 +31,6 @@ export type PolymorphicMotionProps<
 	scroll?: boolean | ScrollOptions;
 	onMotionStart?: (controls: AnimationControls) => void;
 	onMotionEnd?: (controls: AnimationControls) => void;
-	onHoverStart?: React.MouseEventHandler<T>;
-	onHoverEnd?: React.MouseEventHandler<T>;
-	onPressStart?: React.MouseEventHandler<T>;
-	onPressEnd?: React.MouseEventHandler<T>;
 } & Omit<React.DetailedHTMLProps<React.HTMLAttributes<T>, T>, "ref">;
 
 export type KeyframesDefinition = MotionKeyframesDefinition & {
