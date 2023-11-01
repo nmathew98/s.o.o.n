@@ -1,5 +1,5 @@
 import type { MotionExport } from "./types";
-import { PolymorphicMotionFactory } from "./polymorphic-motion";
+import { PolymorphicMotionFactory } from "./factory";
 
 export const Motion: MotionExport = new Proxy(Object.create(null), {
 	get: <T extends keyof React.JSX.IntrinsicElements>(_: never, as: T) =>

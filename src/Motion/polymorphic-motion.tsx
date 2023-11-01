@@ -4,7 +4,6 @@ import type {
 } from "motion";
 import type {
 	KeyframesDefinition,
-	MotionProps,
 	PolymorphicMotionHandles,
 	PolymorphicMotionProps,
 } from "./types";
@@ -15,32 +14,6 @@ import {
 	scroll as motionScroll,
 } from "motion";
 import { usePreviousValueEffect } from "./use-previous-value-effect";
-import { MomentSymbol, bsKey } from "../utils/constants";
-
-const memo = new Map();
-
-export const PolymorphicMotionFactory = <
-	T extends keyof React.JSX.IntrinsicElements,
->({
-	as,
-}: MotionProps<T>) => {
-	if (memo.has(as)) {
-		return memo.get(as);
-	}
-
-	const result = React.forwardRef(
-		(
-			props: Omit<PolymorphicMotionProps<T>, "as">,
-			ref: React.ForwardedRef<PolymorphicMotionHandles>,
-		) => <PolymorphicMotion as={as} {...props} ref={ref} />,
-	);
-
-	(result as any)[bsKey] = MomentSymbol;
-
-	memo.set(as, result);
-
-	return result;
-};
 
 export const PolymorphicMotion = React.forwardRef(
 	<T extends keyof React.JSX.IntrinsicElements>(

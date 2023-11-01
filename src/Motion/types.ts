@@ -1,10 +1,9 @@
-import {
-	type AnimationControls,
-	type AnimationOptionsWithOverrides,
-	type CSSStyleDeclarationWithTransform,
-	type ValueKeyframe,
-	type InViewOptions,
-	type ScrollOptions,
+import type {
+	AnimationControls,
+	AnimationOptionsWithOverrides,
+	InViewOptions,
+	ScrollOptions,
+	MotionKeyframesDefinition,
 } from "motion";
 
 export type MotionExport = {
@@ -38,9 +37,9 @@ export type PolymorphicMotionProps<
 	onPressEnd?: React.MouseEventHandler<T>;
 } & Omit<React.DetailedHTMLProps<React.HTMLAttributes<T>, T>, "ref">;
 
-export type KeyframesDefinition = {
-	[K in keyof CSSStyleDeclarationWithTransform]?: ValueKeyframe;
-} & { transition?: AnimationOptionsWithOverrides };
+export type KeyframesDefinition = MotionKeyframesDefinition & {
+	transition?: AnimationOptionsWithOverrides;
+};
 
 export interface PolymorphicMotionHandles {
 	animateExit: () => Promise<void>;
