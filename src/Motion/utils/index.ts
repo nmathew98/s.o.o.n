@@ -34,7 +34,9 @@ export const animateInitial =
 			!instance ||
 			!isInitialRender ||
 			!initialKeyframesDefinition ||
-			(!initialKeyframesDefinition && !animateKeyframesDefinition) ||
+			(initialKeyframesDefinition &&
+				!isRecord(initialKeyframesDefinition) &&
+				!animateKeyframesDefinition) ||
 			(scrollOptions && inViewOptions)
 		) {
 			return;
@@ -79,7 +81,7 @@ export const animateChange =
 			defaultTransition,
 		);
 
-		const controls = animate(instance, keyframes, keyframes?.transition);
+		const controls = animate(instance, keyframes, keyframes.transition);
 
 		return controls;
 	};
@@ -95,11 +97,7 @@ export const animateEvent =
 			? calculateKeyframesFromAToB(event, initial, defaultTransition)
 			: calculateKeyframesFromAToB(initial, event, defaultTransition);
 
-		const controls = animate(
-			instance,
-			keyframes,
-			event.transition ?? defaultTransition,
-		);
+		const controls = animate(instance, keyframes, keyframes.transition);
 
 		return controls;
 	};
@@ -112,7 +110,7 @@ export const merge = <T extends Record<string, any>>(a?: T, b?: T): T => {
 	const isNullish = (value: unknown): value is null | undefined =>
 		value === null || value === undefined;
 
-	const initialToFinal = Object.fromEntries(
+	const rightJoin = Object.fromEntries(
 		Object.entries(b).map(([key, value]: any[]) => {
 			if (
 				(Array.isArray(value) && Array.isArray(a[key])) ||
@@ -138,13 +136,13 @@ export const merge = <T extends Record<string, any>>(a?: T, b?: T): T => {
 			return [key, mergedValues];
 		}),
 	);
-	const entriesInInitialNotInFinal = Object.fromEntries(
-		Object.entries(a).filter(([key]) => !initialToFinal[key]),
+	const leftOuterJoin = Object.fromEntries(
+		Object.entries(a).filter(([key]) => isNullish(rightJoin[key])),
 	);
 
 	return {
-		...initialToFinal,
-		...entriesInInitialNotInFinal,
+		...rightJoin,
+		...leftOuterJoin,
 	};
 };
 
