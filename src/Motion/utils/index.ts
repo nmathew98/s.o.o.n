@@ -34,7 +34,9 @@ export const animateInitial =
 			!instance ||
 			!isInitialRender ||
 			!initialKeyframesDefinition ||
-			(!initialKeyframesDefinition && !animateKeyframesDefinition) ||
+			(initialKeyframesDefinition &&
+				!isRecord(initialKeyframesDefinition) &&
+				!animateKeyframesDefinition) ||
 			(scrollOptions && inViewOptions)
 		) {
 			return;
@@ -135,7 +137,7 @@ export const merge = <T extends Record<string, any>>(a?: T, b?: T): T => {
 		}),
 	);
 	const leftOuterJoin = Object.fromEntries(
-		Object.entries(a).filter(([key]) => !rightJoin[key]),
+		Object.entries(a).filter(([key]) => isNullish(rightJoin[key])),
 	);
 
 	return {
